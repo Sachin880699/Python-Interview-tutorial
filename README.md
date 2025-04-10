@@ -6,9 +6,8 @@ A comprehensive list of Python interview questions covering core concepts, OOP, 
 
 ## 🐍 Python Fundamentals
 
-- What are Python's key features?
-- What is the difference between Python 2 and Python 3?
 - How does Python handle memory management?
+  
 - What are Python’s built-in data structures?
 - What are Python's built-in types?
 - What is the use of `zip()` function?
