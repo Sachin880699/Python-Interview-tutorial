@@ -3,16 +3,18 @@ ________________________________________________________________________________
 # Basic Interview Question
 
 
-1 ) mixing <br>
-2 ) with keyword <br>
-3 ) what is view <br>
-4 ) diff btw sql and mysql <br>
-5 ) dynamic url <br>
-6 ) django combine multiple query <br>
-7 ) diffrent between functional programming and class programming <br>
-8 ) what is meta <br>
-9 ) what is generics view <br>
-10 ) 
+# What is Python Concurrency
+
+Concurrency in Python refers to the ability of a program to run multiple tasks seemingly at the same time. It's especially useful for improving performance in programs that deal with I/O-bound operations, like file handling, network requests, or database access.
+
+<b> 1. threading – for I/O-bound tasks</b>
+Allows multiple threads to run.
+
+Works well when your program spends time waiting (like for a file or web response).
+
+It uses the same memory space but is limited by the Global Interpreter Lock (GIL) — so it's not ideal for CPU-heavy tasks.
+
+
 ------------------------------------------------------
 
 # what is use of ( if __name__ == '__main__' : )
