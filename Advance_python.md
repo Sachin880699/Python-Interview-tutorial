@@ -143,3 +143,129 @@ Introspection is the ability of Python to **examine objects at runtime**, such a
 ### 35. What is Python memory model?
 
 Python’s memory model manages **object allocation, reference counting, and garbage collection**. Immutable objects like strings and numbers may be shared to optimize memory, while mutable objects are allocated per instance. Memory is handled by the Python interpreter, with cyclic garbage collection for unreachable objects.
+
+
+# Python Multithreading and Multiprocessing Interview Questions and Answers
+
+### 1. What is multithreading in Python?
+
+Multithreading is the process of **running multiple threads concurrently within a single process**. Each thread can execute a task independently while sharing the same memory space. Multithreading is especially useful for I/O-bound tasks like file operations, network requests, or database queries, as it allows the program to perform other tasks while waiting for I/O operations to complete.
+
+### 2. What is multiprocessing in Python?
+
+Multiprocessing is the use of **multiple processes running in parallel**. Each process has its own memory space and Python interpreter, allowing true parallel execution on multi-core CPUs. Multiprocessing is ideal for **CPU-bound tasks** where tasks require significant computation, bypassing Python’s Global Interpreter Lock (GIL) limitation.
+
+### 3. Difference between multithreading and multiprocessing
+
+Multithreading shares memory and resources among threads, but due to the GIL, only one thread executes Python bytecode at a time. Multiprocessing uses separate memory spaces and processes, achieving **true parallelism** and efficiently using multiple CPU cores. Threads are lighter and faster to create, whereas processes are heavier but suitable for CPU-intensive tasks.
+
+### 4. What is Global Interpreter Lock (GIL)?
+
+The Global Interpreter Lock (GIL) is a mutex in CPython that **allows only one thread to execute Python bytecode at a time**, even on multi-core systems. While it simplifies memory management and prevents race conditions, it restricts CPU-bound multi-threading performance.
+
+### 5. Why does Python have GIL?
+
+Python uses GIL to **protect access to Python objects and memory management**, making the interpreter thread-safe. It ensures reference counting for garbage collection is consistent but limits true parallel execution for CPU-bound tasks.
+
+### 6. How does multithreading handle CPU-bound vs I/O-bound tasks?
+
+For **I/O-bound tasks**, multithreading is very effective because threads can wait for I/O operations without blocking other threads. For **CPU-bound tasks**, multithreading is limited due to the GIL. In CPU-intensive scenarios, multiprocessing is preferred to utilize multiple cores effectively.
+
+### 7. How to create a thread in Python?
+
+Threads can be created by **subclassing `threading.Thread`** or by passing a target function to the `Thread` class.
+
+```python
+import threading
+
+def task():
+    print("Thread running")
+
+# Using Thread class with target function
+thread1 = threading.Thread(target=task)
+thread1.start()
+thread1.join()
+```
+
+### 8. How to create a process in Python?
+
+Processes can be created using the `multiprocessing` module by creating `Process` objects and starting them.
+
+```python
+from multiprocessing import Process
+
+def task():
+    print("Process running")
+
+process1 = Process(target=task)
+process1.start()
+process1.join()
+```
+
+### 9. What is the difference between thread and process?
+
+A **thread** is a lightweight unit of execution within a process, sharing the same memory space. A **process** has its own memory space and interpreter, making it heavier but capable of running in parallel without GIL limitations.
+
+### 10. What is thread safety?
+
+Thread safety means that **shared data can be safely accessed by multiple threads** without causing data corruption or race conditions. Techniques like locks, semaphores, and synchronization mechanisms are used to ensure thread safety.
+
+### 11. What is a Lock in Python threading?
+
+A Lock is a synchronization primitive in Python used to **ensure that only one thread accesses a shared resource at a time**. It prevents race conditions in multithreaded programs.
+
+```python
+import threading
+lock = threading.Lock()
+
+lock.acquire()
+# critical section
+lock.release()
+```
+
+### 12. What is a Queue in multithreading?
+
+A `Queue` is a thread-safe FIFO data structure provided by Python’s `queue` module. It allows threads to **communicate and exchange data safely** without explicit locks.
+
+### 13. What is a Pool in multiprocessing?
+
+A Pool is a collection of worker processes in the `multiprocessing` module. It allows you to **map tasks across multiple processes** efficiently and simplifies process management.
+
+```python
+from multiprocessing import Pool
+
+def square(x):
+    return x*x
+
+with Pool(4) as p:
+    result = p.map(square, [1,2,3,4])
+```
+
+### 14. How to share data between threads?
+
+Threads share the same memory space, so **shared variables or data structures** can be accessed by multiple threads. However, synchronization mechanisms like `Lock` are needed to avoid race conditions.
+
+### 15. How to share data between processes?
+
+Since processes have separate memory, data sharing requires **IPC mechanisms** such as `multiprocessing.Queue`, `Pipe`, or shared memory (`Value` and `Array`).
+
+### 16. What is deadlock?
+
+A deadlock occurs when **two or more threads or processes wait indefinitely** for each other to release resources. Proper locking strategies, timeout mechanisms, and careful resource management are needed to prevent deadlocks.
+
+### 17. What is a daemon thread?
+
+A daemon thread runs in the **background and does not prevent the program from exiting**. When all non-daemon threads finish, the program terminates, killing all daemon threads automatically.
+
+### 18. What is the difference between synchronous and asynchronous execution?
+
+Synchronous execution runs tasks **one after another**, blocking until each task finishes. Asynchronous execution allows tasks to **run concurrently**, improving responsiveness, especially for I/O-bound operations.
+
+### 19. How to handle exceptions in threads?
+
+Exceptions in threads do not propagate to the main thread automatically. You can **catch exceptions inside the thread function** or subclass `Thread` and override `run()` to handle exceptions.
+
+### 20. When to use multithreading vs multiprocessing?
+
+Use **multithreading** for I/O-bound tasks where waiting for input/output occurs frequently, like network requests or file operations. Use **multiprocessing** for CPU-bound tasks that require intensi
+
