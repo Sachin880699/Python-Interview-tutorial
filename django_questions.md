@@ -3,7 +3,7 @@
 This section explains how experienced Django developers structure projects,
 follow best practices, and write maintainable, scalable code.
 
-## 1. Explain Django’s MTV architecture with a real example.
+# 1. Explain Django’s MTV architecture with a real example.
 
 Once, I built an e-commerce application using Django.  
 Django’s **MTV (Model-Template-View)** architecture helped me separate concerns.  
@@ -13,7 +13,7 @@ Templates rendered HTML for product pages and dashboards.
 This separation made the code readable, maintainable, and testable.
 
 
-## 2. How does Django handle a request from URL to response?
+# 2. How does Django handle a request from URL to response?
 
 When a user requests a page, Django first matches the URL using `urls.py`.  
 The corresponding view is called to process the request.  
