@@ -3,8 +3,6 @@
 This section explains how experienced Django developers structure projects,
 follow best practices, and write maintainable, scalable code.
 
-
-
 ## 1. Explain Django’s MTV architecture with a real example.
 
 Once, I built an e-commerce application using Django.  
@@ -13,7 +11,6 @@ Models defined the database structure for products, orders, and users.
 Views handled business logic like adding items to cart or checking out.  
 Templates rendered HTML for product pages and dashboards.  
 This separation made the code readable, maintainable, and testable.
-
 
 
 ## 2. How does Django handle a request from URL to response?
