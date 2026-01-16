@@ -1156,3 +1156,101 @@ Proper resource management ensures scalability and prevents crashes under load.
 
 
 
+
+---
+
+## 1. How do you handle authentication in Django?
+
+Django provides a built-in authentication system. I use Django’s `User` model for login, logout, and password management. For APIs, I use token-based authentication like JWT. I also follow best practices like hashing passwords and using HTTPS.
+
+---
+
+## 2. What are Django Channels?
+
+Django Channels are used to handle real-time features like WebSockets. They allow Django to handle asynchronous communication such as chat applications, notifications, or live updates.
+
+---
+
+## 3. How do you design complex systems in Django?
+
+I break complex systems into smaller apps. Each app handles one responsibility. I separate business logic into services or utility files and keep views simple. This makes the system easy to understand and maintain.
+
+---
+
+## 4. Describe a challenging project you worked on.
+
+I worked on a project where performance was slow due to heavy database queries. I optimized queries, added caching, and moved long tasks to background jobs using Celery. This improved response time significantly.
+
+---
+
+## 5. How do you handle a robust (scalable) application?
+
+I design applications to be scalable by using caching, background tasks, proper database indexing, and stateless architecture. I also monitor performance and handle errors properly.
+
+---
+
+## 6. How do you improve caching and performance?
+
+I use Redis to cache frequently accessed data. I also optimize database queries using `select_related` and `prefetch_related`. Caching reduces database load and improves response time.
+
+---
+
+## 7. How do you manage migration files in Django?
+
+I create migrations using `makemigrations` and apply them using `migrate`. I review migration files before applying them and avoid deleting migrations in production. For conflicts, I resolve them carefully.
+
+---
+
+## 8. How do you fix bugs in Django applications?
+
+I first reproduce the bug, check logs, and understand the root cause. Then I fix the issue, test it locally, and ensure it does not break other features. I also add tests if needed.
+
+---
+
+## 9. How do you stay updated with new technologies?
+
+I follow official documentation, blogs, and community forums. I also practice by building small projects and upgrading my skills through courses and certifications.
+
+---
+
+## 10. How do you handle complex ORM queries?
+
+I break complex queries into smaller parts, use Django ORM efficiently, and optimize queries using annotations, subqueries, and proper indexing. I also analyze query performance.
+
+---
+
+## 11. How do you create custom middleware?
+
+I create custom middleware when I need logic to run on every request, such as logging or authentication checks. Middleware helps handle cross-cutting concerns cleanly.
+
+---
+
+## 12. How do you handle complex design patterns?
+
+I use common patterns like service layers, repository patterns, and MVC principles. I keep code modular and reusable to reduce complexity.
+
+---
+
+## 13. How do you handle user permissions?
+
+I use Django’s permission and group system. I assign roles and permissions to users and check permissions in views or APIs to ensure secure access.
+
+---
+
+## 14. How do you measure and improve security?
+
+I follow security best practices like input validation, authentication, authorization, HTTPS, and regular security updates. I also review logs and handle vulnerabilities promptly.
+
+---
+
+## 15. What is Pytest?
+
+Pytest is a testing framework used to write and run tests easily. It helps ensure code quality and catch bugs early.
+
+---
+
+## 16. What is a singleton?
+
+A singleton is a design pattern where only one instance of a class exists throughout the application. It is useful for shared resources like configuration or logging.
+
+---
