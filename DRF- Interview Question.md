@@ -1,6 +1,181 @@
-# Django REST Framework – Interview-Friendly Q&A (Project Oriented)
+# Django REST Framework – Advanced & Missing Interview Topics
 
-> **Purpose:** This file adds **missing high-impact DRF questions** with **short, interview-ready answers**, aligned with **real backend project work (like Cathay Shop)**.
+---
+
+## 1. Pagination in DRF
+
+### Q1. What are the different pagination types in DRF?
+**Answer:**  
+Django REST Framework provides three main pagination styles: PageNumberPagination, LimitOffsetPagination, and CursorPagination.  
+PageNumberPagination is simple and uses page numbers like `?page=2`.  
+LimitOffsetPagination allows clients to control the number of results using `limit` and `offset`.  
+CursorPagination is designed for large datasets and high-traffic APIs where records change frequently.  
+It encodes the position of the last record and avoids duplication or missing data.  
+Pagination improves performance by reducing response size and database load.
+
+---
+
+### Q2. When and why do you use CursorPagination?
+**Answer:**  
+CursorPagination is used in APIs with large and frequently changing datasets, such as e-commerce product listings.  
+It ensures consistent pagination even when new records are inserted or deleted.  
+Unlike offset-based pagination, it avoids performance issues on large tables.  
+It also provides better security because page positions are encoded.  
+CursorPagination is ideal for infinite scrolling use cases.  
+It improves both performance and user experience.
+
+---
+
+## 2. Filtering, Searching, and Ordering
+
+### Q3. How is filtering implemented in DRF?
+**Answer:**  
+Filtering in DRF is implemented using `DjangoFilterBackend`.  
+It allows clients to filter records using query parameters like `?category=electronics`.  
+You define `filterset_fields` or create a custom FilterSet class.  
+Filtering reduces unnecessary data transfer and improves performance.  
+It is commonly used in product listing, order history, and admin dashboards.  
+Proper indexing is important for fast filtered queries.
+
+---
+
+### Q4. What is SearchFilter and how does it work?
+**Answer:**  
+SearchFilter allows text-based search on specified fields using `?search=` parameter.  
+It is useful for searching product names, descriptions, or user details.  
+SearchFilter performs case-insensitive matching by default.  
+It should be used carefully because it can be expensive on large tables.  
+Indexing and limited search fields help optimize performance.  
+It improves usability in applications like e-commerce and dashboards.
+
+---
+
+### Q5. What is OrderingFilter?
+**Answer:**  
+OrderingFilter allows clients to sort API responses using query parameters.  
+For example, `?ordering=price` or `?ordering=-created_at`.  
+It helps users view data in different orders like newest first or lowest price.  
+Ordering improves frontend flexibility without changing backend logic.  
+Only allowed fields should be exposed for ordering.  
+It is commonly used in product listings and reports.
+
+---
+
+## 3. API Versioning
+
+### Q6. What is API versioning and why is it important?
+**Answer:**  
+API versioning allows maintaining multiple versions of an API simultaneously.  
+It helps avoid breaking existing clients when API changes are introduced.  
+Common strategies include URL versioning, header versioning, and namespace versioning.  
+Versioning ensures backward compatibility.  
+It is critical in large systems with mobile apps or external clients.  
+Without versioning, changes can cause application failures.
+
+---
+
+## 4. Swagger / API Documentation
+
+### Q7. How do you generate API documentation in DRF?
+**Answer:**  
+API documentation in DRF can be generated using tools like `drf-yasg` or `drf-spectacular`.  
+These tools automatically generate Swagger UI based on serializers and views.  
+Swagger provides interactive API testing and request examples.  
+It helps frontend developers and QA teams understand APIs easily.  
+Documentation reduces dependency on backend developers.  
+It is essential for large teams and production systems.
+
+---
+
+## 5. Throttling / Rate Limiting
+
+### Q8. What is throttling in DRF and why is it needed?
+**Answer:**  
+Throttling limits the number of API requests a user can make in a given time.  
+It protects APIs from abuse, bots, and DDoS attacks.  
+DRF provides AnonRateThrottle and UserRateThrottle by default.  
+Throttling improves system stability under high load.  
+It is especially important for public and payment-related APIs.  
+Custom throttles can be created for specific use cases.
+
+---
+
+## 6. Permissions and Authorization
+
+### Q9. What is the difference between authentication and authorization?
+**Answer:**  
+Authentication verifies who the user is, while authorization checks what the user can do.  
+Authentication uses mechanisms like JWT, tokens, or sessions.  
+Authorization is handled using permission classes.  
+Permissions control access to views and objects.  
+Both are required for secure APIs.  
+Without authorization, authenticated users may access restricted data.
+
+---
+
+### Q10. How do you create custom permissions in DRF?
+**Answer:**  
+Custom permissions are created by extending `BasePermission`.  
+You implement `has_permission()` or `has_object_permission()`.  
+Custom permissions allow role-based or object-level access control.  
+For example, only owners can edit their own records.  
+This improves security and business logic enforcement.  
+Custom permissions are widely used in admin panels and dashboards.
+
+---
+
+## 7. Nested Serializers
+
+### Q11. What are nested serializers and when are they used?
+**Answer:**  
+Nested serializers are used to represent related models inside a single API response.  
+They are useful for showing parent-child relationships.  
+For example, an OrderSerializer can include ProductSerializer.  
+They reduce the number of API calls needed by frontend.  
+However, they should be used carefully to avoid performance issues.  
+Select_related and prefetch_related help optimize nested queries.
+
+---
+
+## 8. `@action` Decorator
+
+### Q12. What is the `@action` decorator in DRF?
+**Answer:**  
+The `@action` decorator is used to create custom endpoints in ViewSets.  
+It allows defining non-CRUD operations like `add_to_cart` or `apply_coupon`.  
+Actions can be detail-level or list-level.  
+It keeps related logic inside the same ViewSet.  
+This improves code organization and readability.  
+It is commonly used in real-world APIs.
+
+---
+
+## 9. Custom Exception Handling
+
+### Q13. Why do we need custom exception handling?
+**Answer:**  
+Custom exception handling ensures consistent error responses across APIs.  
+It helps return meaningful error messages to clients.  
+DRF allows overriding the default exception handler.  
+This improves debugging and frontend integration.  
+It also helps hide internal implementation details.  
+Standardized errors are important in production systems.
+
+---
+
+## 10. Renderer Classes
+
+### Q14. What are renderer classes in DRF?
+**Answer:**  
+Renderer classes define the format of API responses.  
+JSONRenderer is the default renderer in DRF.  
+Other formats like XML or custom formats can be supported.  
+Custom renderers help enforce response structure.  
+They are useful when APIs must follow strict standards.  
+Renderers improve consistency across services.
+
+---
+
 
 ---
 
