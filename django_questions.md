@@ -1,3 +1,140 @@
+# Django Advanced Topics – Missing Questions for 4 Years Experience
+
+---
+
+## 1. When does a Django QuerySet hit the database?
+
+Django QuerySets are lazy by default.  
+They do not hit the database until they are evaluated.  
+Evaluation happens when we iterate over the queryset, convert it to list, call `len()`, or access elements.  
+This allows QuerySets to be modified and optimized before execution.  
+Lazy evaluation improves performance and avoids unnecessary database hits.  
+Understanding this is critical to avoid unexpected queries in production.
+
+---
+
+## 2. Difference between annotate() and aggregate() in Django ORM?
+
+`annotate()` adds calculated fields to each object in a queryset.  
+It is used when we need per-row computed values.  
+`aggregate()` computes a single summary value for the entire queryset.  
+For example, total sales vs sales per product.  
+Annotate keeps the queryset structure, aggregate returns a dictionary.  
+Both are important for performance-efficient calculations.
+
+---
+
+## 3. What are F() expressions and where have you used them?
+
+`F()` expressions allow database-level operations on model fields.  
+They avoid fetching values into Python before updating.  
+For example, increasing product stock or counters safely.  
+They prevent race conditions during concurrent updates.  
+I use `F()` in inventory updates and counters.  
+This ensures atomic and consistent updates.
+
+---
+
+## 4. What are Q() objects and why are they useful?
+
+`Q()` objects allow complex query conditions.  
+They help combine OR, AND, and NOT logic cleanly.  
+For example, filtering products by multiple optional conditions.  
+They improve readability and flexibility of ORM queries.  
+Q objects are evaluated lazily like normal QuerySets.  
+They are essential for dynamic filters in APIs.
+
+---
+
+## 5. What is select_for_update() and when should it be used?
+
+`select_for_update()` locks selected rows until the transaction completes.  
+It is used inside `transaction.atomic()`.  
+This prevents race conditions in concurrent updates.  
+Very important for payment, reward points, or inventory systems.  
+Only one transaction can modify locked rows at a time.  
+It ensures data consistency in critical workflows.
+
+---
+
+## 6. Explain Django transactions with a real example.
+
+Transactions ensure all database operations succeed or fail together.  
+I use `transaction.atomic()` for multi-step operations.  
+For example, reward point deduction + order creation.  
+If any step fails, all changes are rolled back.  
+This prevents partial updates and data corruption.  
+Transactions are critical for financial and payment logic.
+
+---
+
+## 7. What is AppConfig and why is ready() used?
+
+`AppConfig` defines application configuration.  
+The `ready()` method runs when Django starts.  
+It is commonly used to register signals.  
+This avoids importing signals in multiple places.  
+Improper usage can cause duplicate signal execution.  
+Understanding AppConfig improves clean app initialization.
+
+---
+
+## 8. Difference between values() and values_list()?
+
+`values()` returns dictionaries with field names.  
+`values_list()` returns tuples of field values.  
+`values_list(flat=True)` returns a flat list for single fields.  
+`values_list()` is faster and lighter than `values()`.  
+Used when only raw data is needed.  
+Choosing correctly improves query performance.
+
+---
+
+## 9. How do you handle race conditions in Django?
+
+Race conditions occur when multiple processes modify data simultaneously.  
+I use database transactions and row-level locks.  
+`select_for_update()` prevents concurrent modifications.  
+Atomic updates with `F()` expressions reduce risk.  
+Critical operations are isolated inside transactions.  
+This ensures consistency under concurrent load.
+
+---
+
+## 10. How do you test Django applications?
+
+I write unit tests for models, services, and utilities.  
+Integration tests validate views and APIs.  
+Django `TestCase` provides database isolation.  
+Mocking is used for external APIs and services.  
+Celery tasks are tested using eager execution.  
+Testing ensures stability and confidence in changes.
+
+---
+
+## 11. How do you test Django REST APIs?
+
+I use Django REST Framework test client.  
+Tests validate status codes, response structure, and data.  
+Authentication and permissions are tested explicitly.  
+Edge cases and invalid inputs are covered.  
+Mocking avoids hitting real external services.  
+API tests prevent breaking client integrations.
+
+---
+
+## 12. When should you NOT use Django REST Framework?
+
+DRF adds overhead for simple use cases.  
+For small AJAX endpoints, JsonResponse is enough.  
+Internal admin tools may not need DRF.  
+DRF is ideal for public, versioned APIs.  
+Choosing correctly avoids unnecessary complexity.  
+Architecture decisions should match requirements.
+
+---
+
+
 # Django Architecture, Project Structure & Maintainability – Interview Answers (Part 7)
 
 This section explains how experienced Django developers structure projects,
