@@ -1,4 +1,97 @@
-# Python Functions – Interview Q&A
+# Python Functions – Advanced Interview Questions (36–50)
+
+---
+
+## Question 36: What is a pure function?
+
+A pure function is a function that always returns the same output for the same input and does not modify any external state. It does not depend on global variables, files, or databases. Pure functions are easy to test and debug because they have no side effects. They make code more predictable and reliable. Functional programming encourages the use of pure functions. Example: a function that only calculates and returns a value.
+
+---
+
+## Question 37: What are side effects in functions?
+
+Side effects occur when a function modifies external state such as global variables, files, databases, or prints output. Functions with side effects are harder to test and debug. Examples include writing to a file, updating a database, or changing a global variable. Minimizing side effects improves code maintainability. In production systems, side effects should be controlled and well-documented.
+
+---
+
+## Question 38: Explain pass by value and pass by reference in Python.
+
+Python follows pass by object reference. Immutable objects like integers and strings cannot be changed inside a function. Mutable objects like lists and dictionaries can be modified inside a function. If you reassign a variable, a new reference is created. This behavior can sometimes look like pass by reference. Understanding this helps avoid unexpected bugs in real projects.
+
+---
+
+## Question 39: Can functions be stored in variables?
+
+Yes, functions are first-class objects in Python. They can be assigned to variables, passed as arguments, and returned from other functions. This allows flexible and dynamic programming. It is commonly used in callbacks and higher-order functions. Example: assigning a function to a variable and calling it later. This feature enables functional programming concepts.
+
+---
+
+## Question 40: What is a decorator in Python (basic idea)?
+
+A decorator is a function that modifies another function without changing its source code. It is commonly used to add functionality like logging, authentication, or validation. Decorators wrap the original function and extend its behavior. They are applied using the `@` syntax. Decorators help keep code clean and reusable. Django heavily uses decorators.
+
+---
+
+## Question 41: Why are decorators useful in real projects?
+
+Decorators help separate core logic from cross-cutting concerns like logging and security. They reduce code duplication and improve readability. Common use cases include authentication checks, performance monitoring, and caching. Decorators make code easier to maintain and scale. In Django, decorators are used for permissions and request handling. Interviewers expect basic decorator understanding.
+
+---
+
+## Question 42: What is a callback function?
+
+A callback function is a function passed as an argument to another function. It is executed after a certain task is completed. Callbacks are used in event handling, async programming, and background processing. They improve flexibility by allowing dynamic behavior. Example: passing a function to `map()` or `sorted()`. Callbacks are common in real-world applications.
+
+---
+
+## Question 43: What is function overloading in Python?
+
+Python does not support traditional function overloading like Java or C++. However, it can be achieved using default arguments or `*args` and `**kwargs`. This allows a function to behave differently based on input. It simplifies function design. Example: handling different input lengths inside one function. Interviewers often ask this to check language understanding.
+
+---
+
+## Question 44: What is the difference between return and yield?
+
+`return` sends a value and exits the function immediately. `yield` returns a value and pauses the function state. Functions using `yield` become generators. Generators are memory efficient for large data processing. They generate values one at a time instead of storing all in memory. This is important for performance optimization.
+
+---
+
+## Question 45: When should you use generators instead of functions?
+
+Generators should be used when working with large datasets or streams of data. They reduce memory usage by generating values on demand. Generators improve performance for iterative processing. They are useful in data pipelines and background jobs. Functions return all data at once, which can be inefficient. Generators help build scalable systems.
+
+---
+
+## Question 46: What is function shadowing?
+
+Function shadowing happens when a local variable or function name overrides a built-in function name. Example: naming a variable `list` or `sum`. This can cause unexpected errors and bugs. It is considered bad practice. Avoid using names of built-in functions. Interviewers ask this to test attention to detail.
+
+---
+
+## Question 47: What is idempotent function behavior?
+
+An idempotent function produces the same result even if executed multiple times. Calling it repeatedly does not change the outcome after the first call. This is important in APIs and backend systems. Idempotency prevents duplicate processing. Examples include GET APIs or safe update operations. Interviewers like this concept for backend roles.
+
+---
+
+## Question 48: How do functions help in testing?
+
+Functions allow writing small, isolated units of logic. They make unit testing easier and faster. Functions with clear inputs and outputs are easy to mock and validate. Pure functions are especially test-friendly. Modular functions improve test coverage. Testing becomes simpler and more reliable.
+
+---
+
+## Question 49: What is the importance of docstrings in real projects?
+
+Docstrings help explain what a function does, its parameters, and return values. They improve code readability and maintainability. Tools like Sphinx use docstrings to generate documentation. Good docstrings help new developers understand code faster. They are important in large teams. Interviewers expect basic knowledge of docstrings.
+
+---
+
+## Question 50: How do you decide when to create a function?
+
+A function should be created when logic is reused or becomes complex. It helps break large problems into smaller units. Functions improve readability and reduce duplication. They make code easier to test and debug. Creating functions follows clean code principles. Good function design is a key skill for backend developers.
+
+---
+
 
 ## Question 1: What is a function in Python?
 
