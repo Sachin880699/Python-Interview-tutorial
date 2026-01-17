@@ -1,6 +1,176 @@
-# Django REST Framework – Advanced & Missing Interview Topics
+# REST API Fundamentals – Interview Questions (4 Years Experience)
 
 ---
+
+## 1. What are HTTP status codes? Explain commonly used ones.
+
+**Answer:**  
+HTTP status codes indicate the result of an API request.  
+200 means successful request, while 201 indicates resource creation.  
+400 represents bad request due to invalid input.  
+401 means authentication is required, whereas 403 indicates permission denied.  
+404 is returned when a resource is not found.  
+500 indicates a server-side failure.  
+Correct status codes help frontend handle responses properly.
+
+---
+
+## 2. Difference between 401 and 403 status codes?
+
+**Answer:**  
+401 means the user is not authenticated or token is missing/invalid.  
+403 means the user is authenticated but does not have permission.  
+401 requires re-authentication, while 403 does not.  
+Using correct status codes improves API security clarity.  
+It also helps frontend show correct error messages.  
+Misuse can lead to security loopholes.
+
+---
+
+## 3. Difference between 200 and 201 status codes?
+
+**Answer:**  
+200 indicates a successful request without creating a resource.  
+201 is used when a new resource is successfully created.  
+201 usually includes a `Location` header with resource URL.  
+POST APIs should return 201 on creation.  
+Correct usage improves API clarity and REST compliance.  
+It helps frontend understand API behavior.
+
+---
+
+## 4. What is idempotency in REST APIs?
+
+**Answer:**  
+Idempotency means multiple identical requests produce the same result.  
+GET, PUT, and DELETE are idempotent by nature.  
+POST is not idempotent by default.  
+Idempotency is important in payment and retry scenarios.  
+It prevents duplicate resource creation.  
+It ensures system consistency.
+
+---
+
+## 5. What are HTTP headers and why are they important?
+
+**Answer:**  
+HTTP headers carry metadata about the request or response.  
+Common headers include Authorization, Content-Type, and Accept.  
+Headers are used for authentication, caching, and content negotiation.  
+They help APIs remain stateless.  
+Proper header usage improves performance and security.  
+Headers are critical in REST design.
+
+---
+
+## 6. Difference between PUT and PATCH?
+
+**Answer:**  
+PUT replaces the entire resource with new data.  
+PATCH updates only specific fields of a resource.  
+PUT requires full payload, PATCH requires partial payload.  
+PATCH is more efficient for large objects.  
+PUT is idempotent, PATCH may or may not be.  
+Correct usage improves API clarity.
+
+---
+
+## 7. What is content negotiation?
+
+**Answer:**  
+Content negotiation allows the client to request a specific response format.  
+It uses the Accept header to specify formats like JSON or XML.  
+The server responds with a suitable representation.  
+It improves API flexibility.  
+Content negotiation helps support multiple clients.  
+It is part of REST standards.
+
+---
+
+## 8. What is API versioning and how do you implement it?
+
+**Answer:**  
+API versioning allows multiple API versions to coexist.  
+It prevents breaking changes for existing clients.  
+Common methods include URL-based and header-based versioning.  
+Versioning is critical in long-lived applications.  
+It improves maintainability.  
+Large systems rely heavily on versioning.
+
+---
+
+## 9. What is statelessness in REST APIs?
+
+**Answer:**  
+Statelessness means the server does not store client session data.  
+Each request contains all necessary information.  
+This improves scalability and reliability.  
+Stateless APIs are easier to scale horizontally.  
+Authentication is handled via tokens.  
+REST APIs are designed to be stateless.
+
+---
+
+## 10. How do you design consistent API responses?
+
+**Answer:**  
+Consistent APIs follow a standard response structure.  
+Responses usually include status, message, and data fields.  
+Error responses should be uniform across APIs.  
+Consistency simplifies frontend integration.  
+It improves debugging and maintainability.  
+Production APIs always enforce consistency.
+
+---
+
+## 11. What is HATEOAS?
+
+**Answer:**  
+HATEOAS is a REST principle where responses include links to related actions.  
+It helps clients discover available API operations dynamically.  
+It reduces hardcoding of URLs.  
+HATEOAS improves API discoverability.  
+It is rarely fully implemented in practice.  
+Mostly used in advanced REST designs.
+
+---
+
+## 12. What is CORS and why is it important?
+
+**Answer:**  
+CORS controls which domains can access APIs.  
+It prevents unauthorized cross-origin requests.  
+Browsers enforce CORS policies for security.  
+Incorrect configuration can break frontend apps.  
+It is critical for public APIs.  
+CORS improves security boundaries.
+
+---
+
+## 13. How do you handle API errors properly?
+
+**Answer:**  
+API errors should return meaningful messages and correct status codes.  
+Validation errors should be handled separately.  
+Sensitive information should never be exposed.  
+Error formats should be consistent.  
+Logging helps trace issues.  
+Good error handling improves user experience.
+
+---
+
+## 14. What is API rate limiting?
+
+**Answer:**  
+Rate limiting restricts the number of requests per user or IP.  
+It prevents abuse and protects system resources.  
+Rate limits can be applied using throttling.  
+It improves system stability.  
+Critical APIs must enforce limits.  
+Rate limiting is essential for public APIs.
+
+---
+
 
 ## 1. Pagination in DRF
 
