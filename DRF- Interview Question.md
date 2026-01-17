@@ -1,62 +1,156 @@
-# DRF Interview Questions & Answers
+# Django REST Framework – Interview-Friendly Q&A (Project Oriented)
 
-
----
-
-### Table of Contents
-| No. | Questions |
-| --- | --------- |
-|   | **[Core Concepts](#core-concepts)** |
-|1  | [What is an API?](#what-is-an-api) |
-|2  | [What is a web API?](#what-is-a-web-api) |
-|3  | [What is a REST API?](#what-is-a-rest-api) |
-|4  | [What is an endpoint?](#what-is-an-endpoint) |
-|5  | [What are HTTP Verbs?](#what-are-http-verbs) |
-|6  | [What is the difference between HTTP and HTTPS?](#what-is-the-difference-between-http-and-https) |
-|7  | [What are status codes?](#what-are-status-codes) |
-|8  | [What is the difference between authentication and authorization?](#what-is-the-difference-between-authentication-and-authorization) |
-|9  | [What is a browsable API?](#what-is-a-browsable-api)|
-|10  | [What is CORS?](#what-is-cors) |
-|11  | [How to fix CORS error in Django?](#how-to-fix-cors-error-in-django) |
-|12 | [What is the difference between stateful and stateless?](#what-is-the-difference-between-stateful-and-stateless)  |
-|  | **[Django Rest Framework](#django-rest-framework)**  |
-|1  | [What is Django Rest Framework?](#what-is-django-rest-framework) |
-|2  | [What are benefits of using Django Rest Framework?](#what-are-benefits-of-using-django-rest-framework) |
-|3  | [What are serializers?](#what-are-serializers) |
-|4  | [What are Permissions in DRF?](#what-are-permissions-in-drf) |
-|5  | [How to add login in the browsable API provided by DRF?](#how-to-add-login-in-the-browsable-api-provided-by-drf) |
-|6  | [What are Project-Level Permissions?](#what-are-project-level-permissions) |
-|7  | [How to make custom permission classes?](#how-to-make-custom-permission-classes)|
-|8  | [What is Basic Authentication?](#what-is-basic-authentication) |
-|9  | [What are the disadvantages of Basic Authentication?](#what-are-the-disadvantages-of-basic-authentication) |
-|10  | [What is session authentication?](#what-is-session-authentication) |
-|11  | [What are the pros and cons of session authentication?](#what-are-the-pros-and-cons-of-session-authentication) |
-|12  | [What is Token Authentication?](#what-is-token-authentication) |
-|13  | [What are pros and cons of token authentication?](#what-are-pros-and-cons-of-token-authentication) |
-|14  | [What is the difference between cookies vs localStorage?](#what-is-the-difference-between-cookies-vs-localstorage) |
-|15  | [Where should token be saved - cookie or localStorage?](#where-should-token-be-saved-cookie-or-localstorage) |
-|16  | [What are disadvantages of Django REST Framework's built-in TokenAuthentication?](#what-are-disadvantages-of-django-rest-framework-s-built-in-tokenauthentication) |
-|17  | [What are JSON Web Tokens(JWTs)?](#what-are-json-web-tokens-jwts)  |
-|18  | [What are benefits of JWT?](#what-are-benefits-of-jwt) |
-|19  | [What is the difference between a session and cookie?](#what-is-the-difference-between-a-session-and-cookie) |
-|20  | [What is the difference between cookie and tokens?](#what-is-the-difference-between-cookie-and-tokens) |
-|21  | [What's an access token?](#what-s-an-access-token) |
-|22  | [What is meant by a bearer token?](#what-is-meant-by-a-bearer-token) |
-|23  | [What is the security threat to access token?](#what-is-the-security-threat-to-access-token) |
-|24  | [What is a refresh token?](#what-is-a-refresh-token) |
-|25  | [What are the best practices when using token authentication?](#what-are-the-best-practices-when-using-token-authentication) |
-|26  | [What is cookie-based authentication?](#what-is-cookie-based-authentication) |
-|27  | [What are viewsets in DRF?](#what-are-viewsets-in-drf) |
-|28  | [What are routers in DRF?](#what-are-routers-in-drf) |
-|29  | [What is the difference between APIViews and Viewsets in DRF?](#what-is-the-difference-between-apiviews-and-viewsets-in-drf) |
-|30  | [What is the difference between `GenericAPIView` and `GenericViewset`?](#what-is-the-difference-between-genericapiview-and-genericviewset) |
-| | [About Author](#about-author) | 
-| | [Connect with me](#connect-with-me)| 
-
+> **Purpose:** This file adds **missing high-impact DRF questions** with **short, interview-ready answers**, aligned with **real backend project work (like Cathay Shop)**.
 
 ---
 
-## Core Concepts
+## 🔹 Serializers (Deep & Practical)
+
+### 1. Difference between `Serializer` and `ModelSerializer`
+
+`ModelSerializer` automatically creates fields based on Django models, so it is fast and used for CRUD APIs. `Serializer` is manual and used when the data is not directly tied to a model or needs a custom structure. In Cathay Shop, `ModelSerializer` was used for products and orders, while `Serializer` was used for checkout and payment payloads. `ModelSerializer` also provides default create/update methods, while `Serializer` needs custom methods. Use `Serializer` when you need custom validation or nested response formats.
+
+---
+
+### 2. What are `read_only_fields` and `write_only_fields`
+
+`read_only_fields` are returned in API response but cannot be modified by the user (e.g., `id`, `created_at`). `write_only_fields` are accepted in request but not shown in response (e.g., password or CVV). This ensures security and clean response data. In Cathay Shop, reward points or transaction IDs were kept read-only to prevent misuse. Write-only fields help protect sensitive data while keeping API clean.
+
+---
+
+### 3. How do you override `create()` and `update()` in serializers?
+
+We override `create()` when the data needs custom business logic before saving, like reward points deduction. `update()` is overridden for partial updates or conditional updates (e.g., order status). It helps to manage nested data or complex relationships. For example, in checkout API, `create()` handles points validation, order creation, and payment status. Using `transaction.atomic()` ensures the entire operation is safe and rollback on failure.
+
+---
+
+### 4. What is `SerializerMethodField`?
+
+`SerializerMethodField` is used to return calculated or dynamic values in response. It is not stored in the database but computed at runtime. Example: discount price, reward points value, or final payable amount. It helps to keep business logic in serializer without modifying models. In Cathay Shop, it can be used to show final payable amount after applying points.
+
+---
+
+### 5. How does serializer validation work?
+
+`validate_<field>()` validates a single field value (e.g., price must be positive). `validate()` validates multiple fields together (e.g., points + cash logic). It ensures the API receives correct and safe data before saving. In checkout API, `validate()` checks if user has enough points and the amount is valid. If validation fails, DRF automatically returns a clean `400` response.
+
+---
+
+## 🔹 Views, Querysets & Performance
+
+### 6. How do you optimize queryset performance in DRF?
+
+Use `select_related` for ForeignKey and `prefetch_related` for ManyToMany. Limit fields using `.only()` and avoid heavy logic in serializers. Optimize database queries and use indexing where required. In Cathay Shop product APIs, these optimizations reduced response time and DB load. Performance tuning is essential for high-traffic systems.
+
+---
+
+### 7. What is the N+1 problem in DRF?
+
+N+1 occurs when serializers trigger additional DB queries for related objects, causing slow response and high DB load. It is solved using `select_related` or `prefetch_related`. In product listing APIs, using these reduced queries significantly and improved performance. Interviewers often ask this to check ORM understanding.
+
+---
+
+### 8. Difference between `APIView` and `ViewSet`
+
+`APIView` gives full control over request methods and is used for custom logic (checkout, payment). `ViewSet` is CRUD-style and used for standard operations like product, category, and order APIs. ViewSet + Router reduces code and provides standard endpoints. In Cathay Shop, ViewSets were used for catalog APIs and APIViews for custom checkout flows.
+
+---
+
+## 🔹 Filtering, Searching & Pagination
+
+### 9. How did you implement filtering in DRF?
+
+Filtering was implemented using `django-filter` and query parameters like category, brand, and price range. It helps frontend users search products efficiently. Filtering reduces unnecessary data and improves response speed. In Cathay Shop, filtering improved search accuracy and user experience.
+
+---
+
+### 10. Which pagination strategies did you use?
+
+`PageNumberPagination` was used for product listing to limit data per page. Pagination reduces payload size and improves response time. It also reduces server and database load for high-traffic APIs. For admin dashboards, offset-based pagination was used for large data lists.
+
+---
+
+### 11. Why pagination is important?
+
+Pagination reduces the amount of data returned in a single request, improving response time and reducing server load. It helps in scaling high-traffic endpoints like product listing. It also improves frontend performance and user experience. Pagination is essential in e-commerce systems to avoid heavy API responses.
+
+---
+
+## 🔹 Error Handling & API Design
+
+### 12. How do you handle consistent API responses?
+
+I use a standard response structure with status, data, and message. It makes frontend integration easy and reduces confusion. Consistent responses also help in logging and debugging. In Cathay Shop, this structure was used across product, cart, and order APIs. It helps maintain API quality and reduces errors.
+
+---
+
+### 13. How do you handle invalid requests?
+
+Invalid requests are handled through serializer validation and custom error messages. DRF automatically returns `400` with field-level errors. For custom logic errors, I raise `ValidationError` with a clear message. This ensures the client gets meaningful feedback. It also helps maintain data integrity.
+
+---
+
+### 14. Difference between PUT and PATCH?
+
+PUT is used for full updates and replaces the entire resource. PATCH is used for partial updates and changes only provided fields. In DRF, PATCH is often used for status updates or single field changes. PUT is used when the complete object is updated. In Cathay Shop, order status updates were done using PATCH.
+
+---
+
+## 🔹 Transactions, Concurrency & Safety
+
+### 15. How do you handle transactions in DRF?
+
+I use `transaction.atomic()` to ensure multiple operations succeed or rollback together. This is critical for payment and order creation. In checkout API, points deduction, order creation, and payment status update were wrapped in a transaction. It prevents inconsistent states if any step fails. Transactions ensure reliability in production systems.
+
+---
+
+### 16. How do you prevent double deduction of reward points?
+
+Double deduction is prevented using DB transactions and order status checks. We mark the order as `PENDING` before deduction and change status only after successful payment. Idempotent APIs ensure repeated requests don’t cause multiple deductions. This approach prevents financial errors and user complaints.
+
+---
+
+## 🔹 Authentication, Authorization & Security
+
+### 17. How did you secure APIs?
+
+APIs were secured using JWT or token-based authentication and role-based permissions. Admin APIs were restricted using custom permissions. Sensitive data was hidden using `write_only_fields` and permission checks. HTTPS and secure headers were used for production. Security is essential in e-commerce and payment systems.
+
+---
+
+### 18. What is throttling in DRF?
+
+Throttling limits API usage per user or IP to prevent abuse and reduce load. It is useful for high-traffic endpoints like product listing. Throttling also protects against DDoS attacks and reduces server overload. In Cathay Shop, throttling was used to protect search APIs and login endpoints.
+
+---
+
+## 🔹 Background Tasks & Caching
+
+### 19. Why use Redis with DRF?
+
+Redis is used for caching frequently accessed data like product catalog and search results. It reduces DB hits and improves response time. Caching is essential for high-traffic e-commerce systems. In Cathay Shop, Redis was used for product listing and session caching. It improves scalability and user experience.
+
+---
+
+### 20. Why use Celery?
+
+Celery is used for background tasks like sending emails, notifications, and inventory sync. It offloads heavy processing from request-response cycle. This improves API performance and user experience. In Cathay Shop, Celery handled order confirmation emails and inventory updates. Background tasks ensure smooth operations.
+
+---
+
+## 🔹 Project-Based Questions (MOST IMPORTANT)
+
+### 21. Explain one API you built end-to-end.
+
+For example, the product listing API: it accepts filters (category, brand, price), applies query optimization using `select_related`, paginates results, and returns a consistent response. It is secured using authentication and rate limiting. This API supports high traffic and provides fast results. I also used caching to improve performance.
+
+---
+
+### 22. How did DRF help in Cathay Shop?
+
+DRF enabled fast API development with built-in validation, serialization, and authentication. It simplified integration with frontend and third-party services. DRF also provided performance tools like pagination and throttling. It helped build scalable and production-ready APIs. Overall, DRF was essential for building the e-commerce backend.
+
+---
 
 
     
