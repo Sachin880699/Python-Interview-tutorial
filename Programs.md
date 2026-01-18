@@ -1,3 +1,14 @@
+# Reverse a string without using slicing
+
+          name = "sachin"
+          output = ""
+          for res in name:
+              output = res + output
+          print(output)
+
+
+
+
 # Python sort dictionary by it's value
 
           student_marks = {
