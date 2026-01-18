@@ -16,6 +16,21 @@
               n = n// 10
           print(rev)
 
+# Flatten a nested list
+
+          lst = [[1, 2, 3], [4, 5], [6, 7, [1],[2],2], 2]
+          
+          def flat_list(lst):
+              flat = []
+              for i in lst:
+                  if isinstance(i,list):
+                      flat.extend(flat_list(i))
+                  else:
+                      flat.append(i)
+              return flat
+          print(flat_list(lst))
+
+
 
 # Check if number is palindrome
 
