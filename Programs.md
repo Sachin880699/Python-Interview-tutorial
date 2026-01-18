@@ -32,6 +32,9 @@
 
 
 
+
+
+
 # Check if number is palindrome
 
           num = 1214
