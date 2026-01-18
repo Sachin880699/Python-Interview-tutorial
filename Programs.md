@@ -6,6 +6,51 @@
               output = res + output
           print(output)
 
+# Reverse an integer number
+
+          n = 1234
+          rev = 0
+          while(n > 0):
+              a = n % 10
+              rev = rev * 10 +a
+              n = n// 10
+          print(rev)
+
+
+# Check if number is palindrome
+
+          num = 1214
+          n = num
+          rev = 0
+          while(n > 0):
+              a = n % 10
+              rev = rev * 10 +a
+              n = n // 10
+          
+          if num == rev:
+              print("Yes")
+          else:
+              print("NO")
+
+# Count vowels and consonants in string
+
+          name = "this is testing string"
+          vowels = "aeiou"
+          
+          vowels_count = 0
+          consonants_count = 0
+          
+          for res in name:
+              if res in vowels:
+                  vowels_count +=1
+              else:
+                  consonants_count +=1
+          print(vowels_count)      
+          print(consonants_count)
+
+# Find max and min from list without built-ins
+
+
 
 
 
