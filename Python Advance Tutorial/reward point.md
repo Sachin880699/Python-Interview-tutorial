@@ -1,5 +1,180 @@
 ## Cathay Shop Reward Points & Miles Plus Cash – End-to-End Flow
 
+# ORM
+
+        from django.db import models
+        from django.contrib.auth.models import User
+        from django.db.models import F
+        from django.utils import timezone
+        from datetime import timedelta
+        
+        # -------------------------------
+        # 1. Points Configuration (Admin)
+        # -------------------------------
+        class RewardPointsRule(models.Model):
+            points_per_amount = models.PositiveIntegerField(default=10)  # 1 point per ₹10
+            max_points_per_order = models.PositiveIntegerField(default=500)
+            expiry_months = models.PositiveIntegerField(default=12)  # Points expire after 12 months
+            created_at = models.DateTimeField(auto_now_add=True)
+            updated_at = models.DateTimeField(auto_now=True)
+        
+            def __str__(self):
+                return f"{self.points_per_amount} points per amount, Max {self.max_points_per_order}"
+        
+        
+        # -------------------------------
+        # 2. User Points Balance
+        # -------------------------------
+        class UserPoints(models.Model):
+            user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="reward_points")
+            points = models.PositiveIntegerField(default=0)
+            updated_at = models.DateTimeField(auto_now=True)
+        
+            def add_points(self, points_to_add):
+                self.points = F('points') + points_to_add
+                self.save(update_fields=['points'])
+                self.refresh_from_db()
+        
+            def redeem_points(self, points_to_use):
+                if points_to_use > self.points:
+                    raise ValueError("Insufficient points")
+                self.points = F('points') - points_to_use
+                self.save(update_fields=['points'])
+                self.refresh_from_db()
+        
+            def __str__(self):
+                return f"{self.user.username} - {self.points} points"
+        
+        
+        # -------------------------------
+        # 3. Reward Transactions Log
+        # -------------------------------
+        class RewardTransaction(models.Model):
+            TRANSACTION_TYPES = (
+                ('earn', 'Earn'),
+                ('use', 'Use'),
+                ('expire', 'Expire'),
+                ('manual', 'Manual Adjustment')
+            )
+        
+            user = models.ForeignKey(User, on_delete=models.CASCADE, related_name="reward_transactions")
+            points = models.PositiveIntegerField()
+            transaction_type = models.CharField(max_length=10, choices=TRANSACTION_TYPES)
+            reference = models.CharField(max_length=100, null=True, blank=True)  # e.g., Order ID
+            created_at = models.DateTimeField(auto_now_add=True)
+            expiry_date = models.DateTimeField(null=True, blank=True)  # Only for earned points
+        
+            def __str__(self):
+                return f"{self.user.username} - {self.transaction_type} - {self.points}"
+        
+        
+        # -------------------------------
+        # 4. Order Model (Simplified)
+        # -------------------------------
+        class Order(models.Model):
+            user = models.ForeignKey(User, on_delete=models.CASCADE)
+            total_amount = models.DecimalField(max_digits=10, decimal_places=2)
+            points_used = models.PositiveIntegerField(default=0)
+            points_earned = models.PositiveIntegerField(default=0)
+            payment_status = models.CharField(max_length=20, choices=(('pending', 'Pending'),
+                                                                     ('paid', 'Paid'),
+                                                                     ('failed', 'Failed')))
+            created_at = models.DateTimeField(auto_now_add=True)
+        
+            def __str__(self):
+                return f"Order {self.id} by {self.user.username}"
+        
+        
+        # -------------------------------
+        # 5. Core Functions
+        # -------------------------------
+        
+        # Calculate points earned for an order
+        def calculate_points_earned(order_amount):
+            rule = RewardPointsRule.objects.last()
+            if not rule:
+                return 0
+            return min(order_amount // rule.points_per_amount, rule.max_points_per_order)
+        
+        
+        # Earn points after order
+        def earn_points(user, order):
+            points = calculate_points_earned(order.total_amount)
+            expiry_date = timezone.now() + timedelta(days=30*RewardPointsRule.objects.last().expiry_months)
+            
+            # Update UserPoints
+            user_points, created = UserPoints.objects.get_or_create(user=user)
+            user_points.add_points(points)
+            
+            # Log transaction
+            RewardTransaction.objects.create(
+                user=user,
+                points=points,
+                transaction_type='earn',
+                reference=f'ORDER{order.id}',
+                expiry_date=expiry_date
+            )
+            order.points_earned = points
+            order.save(update_fields=['points_earned'])
+            return points
+        
+        
+        # Redeem points during checkout
+        def redeem_points(user, order, points_to_use):
+            user_points = UserPoints.objects.get(user=user)
+            if points_to_use > user_points.points:
+                raise ValueError("Insufficient points")
+            
+            # Deduct points
+            user_points.redeem_points(points_to_use)
+            
+            # Log transaction
+            RewardTransaction.objects.create(
+                user=user,
+                points=points_to_use,
+                transaction_type='use',
+                reference=f'ORDER{order.id}'
+            )
+            
+            # Update order
+            order.points_used = points_to_use
+            order.save(update_fields=['points_used'])
+            
+            # Calculate remaining amount to charge via credit card
+            remaining_amount = order.total_amount - points_to_use
+            return remaining_amount
+        
+        
+        # Expire points (run via cron or daily job)
+        def expire_points():
+            now = timezone.now()
+            expired_transactions = RewardTransaction.objects.filter(
+                transaction_type='earn',
+                expiry_date__lt=now
+            )
+            for txn in expired_transactions:
+                user_points = UserPoints.objects.get(user=txn.user)
+                user_points.redeem_points(txn.points)
+                RewardTransaction.objects.create(
+                    user=txn.user,
+                    points=txn.points,
+                    transaction_type='expire',
+                    reference=f'EXPIRED-{txn.id}'
+                )
+        
+        
+        # Manual adjustment by admin
+        def add_manual_points(user, points, note="Manual adjustment"):
+            user_points, _ = UserPoints.objects.get_or_create(user=user)
+            user_points.add_points(points)
+            
+            RewardTransaction.objects.create(
+                user=user,
+                points=points,
+                transaction_type='manual',
+                reference=note
+            )
+
 ---
 
 # 1️⃣ Admin Panel Setup
