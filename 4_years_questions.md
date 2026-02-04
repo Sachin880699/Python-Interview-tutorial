@@ -397,3 +397,164 @@
 
 ---
 
+# Python, Django Interview Questions – Advanced / Part 2
+
+---
+
+## Distributed Systems (Advanced)
+
+1. What is a distributed system?
+2. CAP theorem and real-world trade-offs.
+3. Consistency vs availability.
+4. Eventual consistency examples.
+5. Synchronous vs asynchronous communication.
+6. Message queues vs REST APIs.
+7. Kafka vs RabbitMQ basics.
+8. Exactly-once vs at-least-once delivery.
+9. Handling duplicate messages.
+10. Designing idempotent consumers.
+11. Distributed transactions problems.
+12. Saga pattern basics.
+13. Service discovery.
+14. Circuit breaker pattern.
+15. Backpressure handling.
+
+---
+
+## Caching Deep Dive
+
+1. Cache-aside vs write-through.
+2. Cache invalidation strategies.
+3. Cache stampede problem.
+4. TTL tuning.
+5. Redis data structures.
+6. Redis persistence options.
+7. Redis eviction policies.
+8. Hot key problem.
+9. Distributed cache consistency.
+10. When caching hurts performance.
+11. API-level caching vs DB caching.
+12. Per-user cache design.
+13. Cache warming strategies.
+14. Handling stale data.
+15. Monitoring cache efficiency.
+
+---
+
+## Django Internals (Advanced)
+
+1. How Django URL resolver works internally.
+2. Django ORM query compilation.
+3. How QuerySets are evaluated.
+4. Django app loading process.
+5. Signal dispatch mechanism.
+6. Middleware execution chain.
+7. Django template rendering flow.
+8. How Django handles sessions.
+9. Cookie vs session storage.
+10. Django authentication backend flow.
+11. Permission checks internally.
+12. How Django handles file uploads.
+13. Static file collection process.
+14. Django startup time optimization.
+15. Django internals limitations.
+
+---
+
+## Advanced REST Concepts
+
+1. REST vs RPC.
+2. GraphQL vs REST trade-offs.
+3. gRPC basics.
+4. API aggregation pattern.
+5. Backend-for-Frontend (BFF).
+6. API schema evolution.
+7. OpenAPI contract-first approach.
+8. Handling breaking API changes.
+9. API documentation automation.
+10. API mocking strategies.
+11. HATEOAS practical issues.
+12. Long-running operations APIs.
+13. Streaming APIs basics.
+14. Pagination consistency.
+15. API governance.
+
+---
+
+## Background Processing & Async
+
+1. When background jobs are mandatory.
+2. Celery architecture deep dive.
+3. Broker vs backend.
+4. Task retries and backoff.
+5. Idempotent Celery tasks.
+6. Task time limits.
+7. Monitoring Celery workers.
+8. Handling stuck tasks.
+9. Async views in Django.
+10. When async Django does not help.
+11. Async ORM limitations.
+12. Thread pool vs process pool.
+13. Scheduling periodic jobs.
+14. Handling large batch jobs.
+15. Graceful worker shutdown.
+
+---
+
+## Failure Handling & Resilience
+
+1. Types of failures in production.
+2. Partial failure handling.
+3. Retry vs fail-fast.
+4. Exponential backoff.
+5. Timeout tuning.
+6. Bulkhead pattern.
+7. Graceful degradation.
+8. Fallback strategies.
+9. Chaos testing basics.
+10. Designing for failure.
+11. Preventing cascading failures.
+12. Error budgets.
+13. Incident severity levels.
+14. Root cause analysis.
+15. Learning from outages.
+
+---
+
+## Senior Engineer Decision Making
+
+1. How do you choose between two architectures?
+2. How do you evaluate technical risk?
+3. Build vs buy decision.
+4. When to refactor vs rewrite.
+5. How to say no to bad ideas.
+6. Balancing deadlines vs quality.
+7. Handling unclear ownership.
+8. Leading technical discussions.
+9. Documenting design decisions.
+10. Aligning tech with business goals.
+11. Estimating unknown tasks.
+12. Handling production pressure.
+13. Avoiding over-engineering.
+14. Choosing the right abstraction.
+15. What makes a system "boring" and why it is good.
+
+---
+
+## Interview Trap & Scenario Questions
+
+1. A fix works locally but not in production.
+2. A bug appears only under load.
+3. Data loss incident – first steps?
+4. Rollback is not possible – what now?
+5. Third-party API is down.
+6. DB migration is slow on prod.
+7. Cache outage impact handling.
+8. Memory leak but no clear logs.
+9. Sporadic authentication failures.
+10. Timezone bugs across services.
+11. Duplicate payments incident.
+12. Sudden spike in error rates.
+13. Background jobs stuck.
+14. Deployment succeeded but app is broken.
+15. CEO wants a risky hotfix.
