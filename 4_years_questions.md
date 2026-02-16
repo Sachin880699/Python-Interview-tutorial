@@ -358,13 +358,13 @@ The "Four Pillars" of Deadlock (Coffman Conditions)
 
 For a deadlock to occur, four conditions must be met simultaneously. If you can break just one of these, you can prevent deadlocks entirely:
 
-    Mutual Exclusion: Only one thread can use a resource at a time (e.g., a specific database row or a file).
+Mutual Exclusion: Only one thread can use a resource at a time (e.g., a specific database row or a file).
 
-    Hold and Wait: A thread is already holding at least one resource and is waiting to acquire additional resources held by others.
+Hold and Wait: A thread is already holding at least one resource and is waiting to acquire additional resources held by others.
 
-    No Preemption: Resources cannot be forcibly taken away from a thread; they must be released voluntarily.
+No Preemption: Resources cannot be forcibly taken away from a thread; they must be released voluntarily.
 
-    Circular Wait: A chain of threads exists where Thread A waits for Thread B, Thread B waits for Thread C, and Thread C waits for Thread A.
+Circular Wait: A chain of threads exists where Thread A waits for Thread B, Thread B waits for Thread C, and Thread C waits for Thread A.
 
 
 ---
