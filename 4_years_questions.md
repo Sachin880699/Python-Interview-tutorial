@@ -499,31 +499,186 @@ Steep learning curve for advanced features – Features like signals, middleware
 
 ## Django ORM / Database
 
-1. What is ORM and why avoid raw SQL?
-2. select_related vs prefetch_related.
-3. Explain the N+1 query problem.
-4. Difference between annotate and aggregate.
-5. values vs values_list.
-6. exists() vs count().
-7. What is lazy evaluation in QuerySets?
-8. How does Django handle transactions?
-9. How does transaction.atomic work internally?
-10. Why are indexes important?
-11. When should composite indexes be used?
-12. Explain on_delete options in ForeignKey.
-13. What are the risks of CASCADE?
-14. OneToOneField vs ForeignKey.
-15. How is ManyToMany stored internally?
-16. When do you use raw SQL in Django?
-17. Risks of bulk_create.
-18. Why can ORM be slow?
-19. How do you optimize ORM queries?
-20. How do you handle database deadlocks?
-21. How does Django manage DB connections?
-22. Django ORM vs SQLAlchemy.
-23. Why are production migrations risky?
-24. When do you use read replicas?
-25. Drawbacks of ORM abstraction.
+# 1. What is ORM and why avoid raw SQL?
+
+ORM (Object-Relational Mapping) is a technique that lets you interact with a database using programming language objects instead of writing SQL queries directly. In Django, the ORM allows you to create, read, update, and delete records using Python classes and methods, like Book.objects.filter(author="John").
+Using ORM instead of raw SQL is preferred because it:
+Prevents SQL injection by safely handling user inputs.
+Improves readability and maintainability, since queries are written in Python.
+Provides database portability, making it easier to switch between PostgreSQL, MySQL, or SQLite.
+Raw SQL should be avoided unless you need complex queries that the ORM can’t efficiently handle.
+
+# 2. select_related vs prefetch_related.
+select_related vs prefetch_related in Django:
+
+select_related performs a SQL JOIN and fetches related objects in the same query. It’s efficient for one-to-one or foreign key relationships. For example: Book.objects.select_related('author') fetches books and their authors in one query.
+prefetch_related performs a separate query for related objects and joins them in Python. It’s ideal for many-to-many or reverse foreign key relationships. For example: Author.objects.prefetch_related('books') fetches authors and their books in two queries, avoiding repeated database hits.
+Both help prevent the N+1 query problem and improve performance in Django applications.
+
+# 3. Explain the N+1 query problem.
+The N+1 query problem happens when your code runs one query to fetch main objects (the “1”) and then runs an additional query for each related object (the “N”), causing many unnecessary database hits.
+For example, if you fetch 10 books and then access each book’s author without optimization
+
+        books = Book.objects.all()
+        for book in books:
+            print(book.author.name)  # triggers a query for each book
+            
+Using select_related or prefetch_related solves this by fetching related objects in bulk, reducing queries and improving performance.
+
+
+# 4. Difference between annotate and aggregate.
+<b>aggregate :</b> computes a summary across the entire queryset and returns a single value.
+        from django.db.models import Avg
+        Book.objects.aggregate(Avg('price'))  # returns {'price__avg': 250}
+
+<b>annotate :</b>computes a value for each object in the queryset and adds it as an extra field.
+        from django.db.models import Count
+        Author.objects.annotate(num_books=Count('books'))
+
+
+# 5. values vs values_list.
+<b> Values </b> returns a list of dictionaries, where each dict maps field names to values.
+        Book.objects.values('title', 'author')
+        # [{'title': 'Book1', 'author': 1}, {'title': 'Book2', 'author': 2}]
+        
+<b>values_list :</b> returns a list of tuples (or flat values if flat=True) for the fields you specify.
+
+        Book.objects.values_list('title', 'author')
+        # [('Book1', 1), ('Book2', 2)]
+        
+        Book.objects.values_list('title', flat=True)
+        # ['Book1', 'Book2']
+
+
+
+# 7. What is lazy evaluation in QuerySets?
+Lazy evaluation in Django means that querysets are not executed immediately when they are created. Django waits until the data is actually needed—like when you iterate, slice, or print the queryset—to hit the database.
+
+        books = Book.objects.filter(author='John')  # No query yet
+        for book in books:                           # Query runs here
+            print(book.title)
+            
+This improves performance because multiple filters or operations can be chained without hitting the database repeatedly, and only the final, necessary query is executed. It’s also why you need to be careful with repeated iteration over large querysets.
+
+
+# 8. How does Django handle transactions?
+
+Django handles transactions using its database transaction management system, ensuring that a group of database operations either all succeed or all fail. By default, each HTTP request is wrapped in an atomic transaction, meaning if an error occurs, changes are rolled back automatically.
+You can also manually control transactions using transaction.atomic() to wrap a block of code:
+
+        from django.db import transaction
+        with transaction.atomic():
+            book.save()
+            author.save()
+
+
+# 9. How does transaction.atomic work internally?
+
+transaction.atomic() in Django works by creating a transaction context that ensures all database operations inside it are executed as a single unit. Internally, it uses the database’s BEGIN / COMMIT / ROLLBACK mechanism:
+
+When entering the atomic block, Django issues a BEGIN to start a transaction.
+
+All database operations inside the block are tracked but not permanently committed until the block exits successfully.
+
+If an exception occurs, Django issues a ROLLBACK, undoing all operations in that block.
+
+If everything succeeds, Django issues a COMMIT, saving all changes.
+
+It also supports nested atomic blocks using savepoints, so only the innermost failing block is rolled back without affecting outer transactions.
+
+        from django.db import transaction
+        
+        with transaction.atomic():
+            book.save()       # part of transaction
+            author.save()     # part of transaction
+        # Commit happens here if no exceptions
+
+# 10. Why are indexes important?
+Indexes are important in databases because they speed up data retrieval by allowing the database to locate rows without scanning the entire table. Without indexes, queries like WHERE filters or ORDER BY can become very slow as the table grows.
+
+        class User(models.Model):
+            email = models.EmailField(db_index=True)
+
+Now, User.objects.get(email="abc@example.com") is much faster.
+Indexes improve read performance, but they slightly slow down writes and updates, so they should be added strategically on frequently queried fields.
+
+# 11. When should composite indexes be used?
+Composite indexes should be used when your queries filter or order by multiple columns together frequently. They help the database quickly locate rows based on the combination of these fields instead of scanning individually.
+
+        Book.objects.filter(author='John', published_year=2020)
+
+Creating a composite index on (author, published_year) speeds up this query.
+
+Key points:
+Order matters: the index helps queries that filter starting from the first field.
+They are most useful for complex filters or sorting, not every combination of fields.
+Overusing them can increase write overhead, so use them only where query performance benefits are clear.
+
+# 12. Explain on_delete options in ForeignKey.
+In Django, the on_delete option in a ForeignKey defines what happens to related objects when the referenced object is deleted. Common options are:
+<b>CASCADE</b> – Deletes dependent objects automatically.
+
+        author = models.ForeignKey(Author, on_delete=models.CASCADE)
+        
+If an author is deleted, all their books are also deleted.
+<b>PROTECT :</b> Prevents deletion by raising an error.
+
+        author = models.ForeignKey(Author, on_delete=models.PROTECT)
+you cannot delete an author if books reference them.
+
+SET_NULL – Sets the foreign key to NULL (requires null=True).
+
+SET_DEFAULT – Sets the foreign key to a default value.
+
+DO_NOTHING – Does nothing, which may cause integrity errors if the database enforces constraints.
+
+
+
+# 13. What are the risks of CASCADE?
+The main risks of using CASCADE in Django are:
+
+Accidental data loss – Deleting a single parent object can unintentionally delete a large number of related records. For example, deleting an Author with CASCADE will delete all their Book records.
+
+Hard-to-trace deletions – In complex models with multiple cascading relationships, a single delete can trigger a chain reaction, removing many objects silently.
+
+Performance impact – Deleting many related objects at once can be slow and may lock tables in large databases.
+
+Best practice: Use CASCADE only when you are certain that deleting a parent should remove all dependent objects, and consider alternatives like PROTECT or SET_NULL for safer data management
+
+# 14. OneToOneField vs ForeignKey.
+ForeignKey represents a many-to-one relationship. Many objects can point to the same related object.
+Example: Many Book objects can have the same Author.
+
+        author = models.ForeignKey(Author, on_delete=models.CASCADE)
+        
+OneToOneField represents a one-to-one relationship. Each object is linked to exactly one related object.
+Example: A User can have only one Profile.
+        user = models.OneToOneField(User, on_delete=models.CASCADE)
+
+# 15. How is ManyToMany stored internally?
+In Django, a ManyToManyField is stored internally using an intermediate (junction) table that holds the relationships between the two models. This table contains at least two columns: the primary keys of the related models.
+
+        class Book(models.Model):
+            title = models.CharField(max_length=100)
+        
+        class Author(models.Model):
+            name = models.CharField(max_length=50)
+            books = models.ManyToManyField(Book)
+
+Django automatically creates a table like author_books with columns: author_id and book_id. Each row represents a link between an author and a book.
+This allows:
+Multiple authors per book
+Multiple books per author
+
+# 18. Why can ORM be slow?
+Django’s ORM can be slow because it adds abstraction layers on top of SQL, which sometimes generate inefficient queries. Common reasons include:
+Multiple queries (N+1 problem) – Accessing related objects in loops without select_related or prefetch_related.
+Inefficient joins or filters – Complex relationships may produce large joins that could be written more efficiently in raw SQL.
+Large data retrieval – Fetching full model instances when only a few fields are needed; using values() or values_list() is faster.
+Database hits in loops – Repeated queries for each object instead of batch operations.
+Tip: The ORM is great for readability and portability, but for high-performance, complex queries, sometimes raw SQL or database-specific optimizations are necessary.
+
+
 
 ---
 
