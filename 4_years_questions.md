@@ -293,26 +293,79 @@ The is operator checks if two variables point to the exact same object in memory
 
 ## Advanced Python / Design
 
-1. What is monkey patching and what are its risks?
-2. Why do we use context managers?
-3. How does the with statement work internally?
-4. What are the risks of using eval and exec?
-5. What is a metaclass?
-6. When should inheritance not be used?
-7. Composition vs inheritance.
-8. When do you use an abstract base class?
-9. How do you implement interfaces in Python?
-10. What is thread safety?
-11. Difference between Lock and RLock.
-12. What is a deadlock and how does it happen?
-13. Async vs threading in Python.
-14. When is asyncio a better choice?
-15. What is an event loop?
-16. Futures vs coroutines.
-17. Explain a race condition with example.
-18. What would happen if Python removed the GIL?
-19. Difference between CPython and PyPy.
-20. How do you make Python code production-ready?
+# 2. Why do we use context managers?
+We use context managers primarily to handle resource management safely and cleanly. Their main job is to ensure that resources—like file handles, database connections, or network sockets—are properly opened and, more importantly, closed, even if your code encounters an error or crashes halfway through.
+
+<b>1. The "Safety Net" (Exception Handling)</b>
+
+Without a context manager, if an error occurs after opening a file but before closing it, the file remains open in memory. This can lead to memory leaks or file corruption. Context managers use a try...finally logic internally to guarantee the "cleanup" code runs no matter what.
+
+
+# 5. What is a metaclass?
+A Metaclass is the "class of a class." While a standard class defines how instances (objects) are created, a metaclass defines how classes themselves are constructed. In Python, classes are not just static code blocks; they are first-class objects created at runtime, and the metaclass is the "factory" that builds them.
+        
+        # The Metaclass
+        class SecretSauce(type):
+            def __new__(cls, name, bases, dct):
+                # We can modify the class before it is created
+                dct['is_awesome'] = True
+                return super().__new__(cls, name, bases, dct)
+        
+        # Using the Metaclass
+        class MyClass(metaclass=SecretSauce):
+            pass
+        
+        # The class now has an attribute it never defined!
+        print(MyClass.is_awesome)  # Output: True
+
+# 11. Difference between Lock and RLock.
+In multi-threaded programming, both Lock and RLock (Re-entrant Lock) are used to prevent race conditions by ensuring only one thread accesses a resource at a time. The primary difference lies in how they handle a thread that tries to acquire the same lock multiple times.
+
+<b>The Standard Lock</b>
+A standard Lock is "owned" by no one. If a thread acquires it and then tries to acquire it again (without releasing it first), the thread will deadlock. It will sit forever waiting for itself to release the lock it is currently holding.
+        import threading
+        
+        lock = threading.Lock()
+        
+        lock.acquire()
+        print("First acquire")
+        
+        #This will hang forever (Deadlock)!
+        lock.acquire() 
+        print("Second acquire")
+        lock.release()
+<b>The RLock (Re-entrant Lock)</b>
+An RLock keeps track of the owner thread and a recursion level. If the thread that already owns the lock tries to acquire it again, the "recursion level" simply increments by one, and the code continues. To fully unlock the resource, the thread must call release() the exact same number of times it called acquire()
+
+        import threading
+        
+        rlock = threading.RLock()
+        
+        rlock.acquire()
+        print("First acquire")
+        
+        # This works fine with RLock!
+        rlock.acquire() 
+        print("Second acquire")
+        
+        rlock.release()
+        rlock.release() # Must release twice to unlock for other threads
+
+# 12. What is a deadlock and how does it happen?
+a Deadlock is a "traffic jam" in a computer program. It occurs when two or more threads (or processes) are frozen forever because each is waiting for the other to release a resource.
+
+The "Four Pillars" of Deadlock (Coffman Conditions)
+
+For a deadlock to occur, four conditions must be met simultaneously. If you can break just one of these, you can prevent deadlocks entirely:
+
+    Mutual Exclusion: Only one thread can use a resource at a time (e.g., a specific database row or a file).
+
+    Hold and Wait: A thread is already holding at least one resource and is waiting to acquire additional resources held by others.
+
+    No Preemption: Resources cannot be forcibly taken away from a thread; they must be released voluntarily.
+
+    Circular Wait: A chain of threads exists where Thread A waits for Thread B, Thread B waits for Thread C, and Thread C waits for Thread A.
+
 
 ---
 
