@@ -181,7 +181,7 @@ Global Interpreter Lock (GIL) is that it acts as a "single-lane bridge" for Pyth
     # entirely separate memory spaces (separate interpreters).
 
     
-15. Why is multithreading slow for CPU-bound tasks in Python?
+# 15. Why is multithreading slow for CPU-bound tasks in Python?
 Multithreading is slow for CPU-bound tasks in Python because of the Global Interpreter Lock (GIL), which prevents multiple threads from executing Python bytecode simultaneously. Even on a multi-core processor, the GIL forces threads to "take turns" on a single CPU core, adding significant overhead due to constant context switching (the CPU jumping between threads). Instead of gaining speed from parallel execution, the program spends extra time managing the lock and swapping thread states, which often makes it slower than a simple sequential script. To achieve true parallelism for math or data processing, you must use the multiprocessing module to create separate memory spaces and interpreters.
 
     import threading
