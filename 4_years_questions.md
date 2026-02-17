@@ -684,36 +684,283 @@ Tip: The ORM is great for readability and portability, but for high-performance,
 
 ## Django REST Framework (DRF)
 
-1. What is REST and why use DRF?
-2. Serializer vs ModelSerializer.
-3. How do you perform validation in serializers?
-4. Custom validation examples.
-5. APIView vs ViewSet.
-6. When to use generic views?
-7. JWT vs session authentication.
-8. Why are refresh tokens needed?
-9. Authentication vs permission.
-10. How do you write custom permissions?
-11. Why is throttling required?
-12. Types of pagination in DRF.
-13. API versioning strategies.
-14. PUT vs PATCH.
-15. What is an idempotent API?
-16. Correct usage of HTTP status codes.
-17. Error handling best practices in APIs.
-18. How do you maintain backward compatibility?
-19. Rate limiting design.
-20. File upload API challenges.
-21. Performance issues with serializers.
-22. Problems with nested serializers.
-23. Common API security risks.
-24. What is CORS?
-25. How do you test APIs?
-26. Swagger / OpenAPI usage.
-27. How do you optimize API response time?
-28. Alternatives to DRF signals.
-29. How do you implement API caching?
-30. Limitations of DRF.
+# 1. What is REST and why use DRF?
+REST is an architectural style used to build scalable web APIs. It works on standard HTTP methods like GET, POST, PUT, DELETE and treats data as resources, for example /api/users/. REST is stateless, meaning each request contains all required information, usually exchanged in JSON format.
+
+Django REST Framework (DRF) is a powerful library built on top of Django to create RESTful APIs quickly. It provides built-in features like serializers for data conversion, authentication, permissions, pagination, and viewsets, which reduce boilerplate code.
+
+# 2. Serializer vs ModelSerializer.
+3. In Django REST Framework, both Serializer and ModelSerializer are used to convert complex data like model instances into JSON and vice versa, but they differ in automation.
+
+Serializer is fully manual. You must define all fields and implement create() and update() methods yourself. It gives more control and is useful for non-model data or custom validation logic.
+
+ModelSerializer automatically generates fields based on a Django model and provides default create() and update() methods. It reduces boilerplate code and is commonly used for standard CRUD APIs.
+
+# 6. APIView vs ViewSet.
+ In Django REST Framework, both APIView and ViewSet are used to build APIs, but they differ in structure and automation.
+
+APIView gives full control over HTTP methods like get(), post(), put(), and delete(). You manually define each method, so it’s more flexible but requires more code. It’s useful when you need custom logic for each request.
+
+ViewSet groups related actions (like list, create, retrieve, update, delete) into a single class. When combined with a router, URLs are generated automatically, reducing boilerplate code.
+
+# 8. When to use generic views?
+
+In Django REST Framework, generic views are used when you want to build common CRUD APIs quickly with minimal code. They provide built-in functionality for operations like list, create, retrieve, update, and delete.
+For example, ListCreateAPIView handles both listing and creating objects without writing separate get() and post() methods. You only need to define queryset and serializer_class.
+Use generic views when your API follows standard CRUD behavior and doesn’t require highly customized logic.
+
+# 9. JWT vs session authentication.
+In web applications, Session Authentication and JWT (JSON Web Token) Authentication are two common authentication methods.
+
+Session Authentication stores user data on the server. After login, the server creates a session and sends a session ID in a cookie. Each request includes that cookie, and the server verifies it. It’s simple and works well for traditional web apps.
+
+JWT Authentication is stateless. After login, the server generates a signed token containing user information. The client sends this token in the header (Authorization: Bearer <token>) with each request. No session is stored on the server.
+
+# 10. Why are refresh tokens needed?
+Refresh tokens are needed to maintain security while keeping users logged in for a longer time.
+
+In JWT authentication, access tokens are short-lived (for example, 15–30 minutes) to reduce the risk if they are stolen. When the access token expires, the client uses a refresh token to request a new access token without forcing the user to log in again.
+
+This improves security (short expiry for access tokens) and user experience (no frequent logins).
+
+# 11. Authentication vs permission.
+Authentication is the process of verifying who the user is. It checks the user’s identity using credentials like username/password, token, or session. For example, logging in with JWT or session authentication confirms the user’s identity.
+
+Permission determines what the authenticated user is allowed to do. It controls access to specific resources or actions, such as read-only access or admin-only operations. In DRF, this is handled using permission classes like IsAuthenticated or IsAdminUser.
+
+
+# 12. How do you write custom permissions?
+In Django REST Framework, custom permissions are written by creating a class that inherits from BasePermission and overriding specific methods.
+
+There are two main methods:
+
+        has_permission(self, request, view) → Checks general access to the view.
+        
+        has_object_permission(self, request, view, obj) → Checks permission for a specific object.
+        
+        from rest_framework.permissions import BasePermission
+        
+        class IsOwner(BasePermission):
+            def has_object_permission(self, request, view, obj):
+                return obj.user == request.user
+        permission_classes = [IsOwner]
+
+# 13. Why is throttling required?
+Throttling is required to control the number of API requests a user or client can make within a specific time period. It helps protect the application from abuse, brute-force attacks, and excessive traffic.
+For example, you can limit login attempts to 5 requests per minute to prevent password guessing attacks. In DRF, throttling classes like UserRateThrottle or AnonRateThrottle can be configured easily.
+Throttling also ensures fair usage, so one user does not consume all server resources.
+
+# 14. Types of pagination in DRF.
+n Django REST Framework, pagination is used to divide large datasets into smaller chunks to improve performance and response size. DRF provides three main types of pagination:
+PageNumberPagination – Uses page numbers like ?page=2. It’s simple and commonly used in web applications.
+LimitOffsetPagination – Uses limit and offset like ?limit=10&offset=20. It’s flexible and similar to SQL LIMIT/OFFSET.
+CursorPagination – Uses an encoded cursor instead of page numbers. It is efficient for large datasets and prevents duplicate or missing records when data changes.
+
+# 15. API versioning strategies.
+API versioning is used to manage changes in APIs without breaking existing clients. It allows backward compatibility when updating features or response formats.
+
+Common versioning strategies in DRF are:
+URL Versioning – Version is included in the URL, like /api/v1/users/. It is simple and most commonly used.
+Query Parameter Versioning – Version is passed as a query parameter, like ?version=1.0.
+Header Versioning – Version is sent in request headers, keeping URLs clean.
+Namespace Versioning – Different URL namespaces for different versions.
+
+# 16. PUT vs PATCH.
+PUT and PATCH are both used to update resources in REST APIs, but they behave differently.
+PUT is used for full update. It replaces the entire resource with the new data. If a field is missing, it may be set to null or default.
+PATCH is used for partial update. It updates only the fields provided in the request and keeps the rest unchanged.
+
+# 17. What is an idempotent API?
+An idempotent API is one where making the same request multiple times produces the same result as making it once. In other words, repeating the request does not create additional side effects.
+For example, a PUT request to update a user’s email to "a@gmail.com" will always result in the same final state, even if sent multiple times. Similarly, a DELETE request remains idempotent because deleting an already deleted resource does not change the outcome.
+However, POST is usually not idempotent because sending it multiple times may create multiple records.
+
+# 18. Correct usage of HTTP status codes.
+Correct usage of HTTP status codes is important because it clearly communicates the result of an API request to the client. It helps in proper error handling and debugging.
+
+Common categories:
+
+2xx (Success) – 200 OK (successful GET), 201 Created (new resource created), 204 No Content (successful but no response body).
+
+4xx (Client Errors) – 400 Bad Request (invalid input), 401 Unauthorized (not authenticated), 403 Forbidden (no permission), 404 Not Found.
+
+5xx (Server Errors) – 500 Internal Server Error (unexpected failure).
+
+
+# 19. Error handling best practices in APIs.
+Error handling in APIs should be consistent, secure, and informative without exposing sensitive details. The goal is to help the client understand what went wrong and how to fix it.
+Best practices:
+Use proper HTTP status codes – 400 for validation errors, 401 for authentication failure, 403 for permission denied, 500 for server errors.
+Return structured error responses – For example:
+
+        {
+          "error": "ValidationError",
+          "message": "Email field is required"
+        }
+Do not expose internal details – Avoid sending stack traces or database errors in production.
+
+Handle exceptions globally – In DRF, use custom exception handlers for consistent responses.
+
+# 21. Rate limiting design.
+Rate limiting design is about controlling how many requests a client can make within a specific time window to protect system resources and prevent abuse.
+
+Common approaches:
+
+Fixed Window – Allow a set number of requests per minute/hour (simple but can cause burst traffic at window reset).
+
+Sliding Window – More accurate; limits requests based on a moving time window.
+
+Token Bucket / Leaky Bucket – Allows controlled bursts while maintaining a steady request rate.
+
+Rate limiting can be applied per IP, user, or API key, often using tools like Redis for fast counters.
+
+
+# 23. Performance issues with serializers.
+Performance issues with serializers in DRF usually occur when handling large datasets or complex nested relationships.
+
+Common problems:
+
+N+1 queries – Nested serializers may trigger multiple database hits if select_related or prefetch_related is not used.
+
+Large querysets – Serializing thousands of objects at once increases memory usage and response time.
+
+Deep nesting – Multiple nested serializers add processing overhead.
+
+Unnecessary fields – Serializing all model fields when only a few are needed.
+
+Optimization tips: Use pagination, optimize queryset with select_related/prefetch_related, limit fields, and avoid heavy nested serializers when possible.
+
+
+# 25. Common API security risks.
+Common API security risks include:
+
+Broken authentication – Weak token handling or improper session management can allow unauthorized access.
+
+Broken authorization – Missing permission checks may let users access or modify other users’ data.
+
+Injection attacks – SQL injection or command injection if inputs are not properly validated.
+
+Excessive data exposure – Returning sensitive fields like passwords or internal IDs in API responses.
+
+Lack of rate limiting – Can lead to brute-force or DDoS attacks.
+
+Insecure transport – Not using HTTPS exposes tokens and credentials.
+
+# 26. What is CORS?
+CORS (Cross-Origin Resource Sharing) is a browser security mechanism that controls how resources are requested from a different domain than the one serving the web page.
+
+By default, browsers block cross-origin requests for security reasons. CORS allows the server to specify which domains are permitted using headers like Access-Control-Allow-Origin.
+
+For example, if your frontend runs on http://localhost:3000 and backend on http://localhost:8000, the backend must allow that origin through CORS configuration.
+
+
+# 27. How do you test APIs?
+APIs can be tested at multiple levels to ensure correctness, security, and performance.
+
+Unit Testing – Test individual views or functions using Django’s TestCase or DRF’s APIClient.
+
+        response = self.client.get('/api/books/')
+        self.assertEqual(response.status_code, 200)
+        
+Integration Testing – Test complete request–response flow including database interaction.
+
+Manual Testing – Use tools like Postman to validate endpoints and edge cases.
+
+Authentication & Permission Testing – Verify access control for different user roles.
+
+Performance Testing – Check response time and load handling.
+
+# 28. Swagger / OpenAPI usage.
+Swagger / OpenAPI is used to document and describe REST APIs in a standard, machine-readable format. It provides clear information about endpoints, request/response formats, authentication, and status codes.
+
+In Django REST Framework, tools like drf-yasg or drf-spectacular automatically generate interactive API documentation. This allows developers to test APIs directly from the browser.
+
+Benefits:
+
+Improves API documentation and clarity
+
+Helps frontend and backend teams collaborate
+
+Enables automatic client SDK generation
+
+# 29. How do you optimize API response time?
+
+o optimize API response time, focus on database, serialization, and infrastructure improvements.
+
+Optimize database queries – Use select_related, prefetch_related, proper indexing, and avoid the N+1 query problem.
+
+Limit data size – Use pagination and return only required fields instead of full objects.
+
+Caching – Cache frequent responses using Redis or Django cache framework.
+
+Efficient serialization – Avoid deep nested serializers and large querysets.
+
+Asynchronous tasks – Move heavy operations (emails, reports) to background jobs using Celery.
+
+# 30. Alternatives to DRF signals.
+In Django/DRF, signals are used to trigger actions automatically (like post_save), but they can make code harder to trace and debug. So, there are better structured alternatives.
+
+Common alternatives:
+
+Override save() method – Add logic directly inside the model for predictable behavior.
+
+Service layer / business logic functions – Keep logic in a separate service file and call it explicitly from views. This improves clarity and testability.
+
+Custom model managers – Encapsulate complex database logic inside a manager method.
+
+Use Django signals carefully only for decoupled features like logging or notifications.
+
+
+# 31. How do you implement API caching?
+API caching is implemented to reduce database load and improve response time by storing frequently requested data temporarily.
+
+Common ways to implement caching in Django/DRF:
+
+Per-view caching – Use Django’s @cache_page decorator to cache entire API responses.
+        
+        from django.views.decorators.cache import cache_page
+        
+        @cache_page(60 * 5)  # cache for 5 minutes
+        def get(self, request):
+            ...
+Low-level caching – Use Django cache framework with Redis or Memcached to store specific query results.
+
+Database query caching – Cache expensive query results manually.
+
+Use HTTP cache headers – Like ETag and Last-Modified for client-side caching.
+
+# 32. Limitations of DRF.
+Django REST Framework (DRF) is powerful, but it has some limitations:
+
+Performance overhead – DRF adds abstraction layers (serializers, viewsets), which can be slower compared to lightweight frameworks like FastAPI for high-performance APIs.
+
+Complex nested serializers – Deep relationships can become hard to manage and impact performance.
+
+Not fully async by default – Although Django supports async, DRF is still largely synchronous in many use cases.
+
+Over-engineering for simple APIs – For very small services, DRF can feel heavy.
+
+Learning curve – Concepts like serializers, permissions, throttling, and viewsets require time to master.
+
+# What isa Synchronous
+
+Sync (Synchronous) means tasks are executed one after another, and each step waits for the previous one to complete before moving forward.
+
+In a synchronous web request, the server processes the request and blocks until the response is ready. If a database query or external API call takes time, the server waits during that time.
+
+        def get_books(request):
+            books = Book.objects.all()  # waits until DB returns data
+            return JsonResponse({"count": books.count()})
+# what is Asynchronous
+
+Asynchronous (Async) means tasks can run without blocking the execution flow, allowing other operations to continue while waiting for a response (like a database query or API call).
+
+In async programming, when a task is waiting (for I/O operations such as network or database), the system can handle other requests instead of staying idle.
+
+        async def get_data(request):
+            data = await fetch_external_api()
+            return JsonResponse(data)
+
 
 ---
 
