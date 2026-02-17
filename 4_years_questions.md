@@ -961,6 +961,214 @@ In async programming, when a task is waiting (for I/O operations such as network
             data = await fetch_external_api()
             return JsonResponse(data)
 
+# What is the architecture of DRF?
+The architecture of Django REST Framework (DRF) is built on top of Django and follows a layered, modular design to handle API requests efficiently.
+
+Request Layer – DRF wraps Django’s request into a Request object, adding features like authentication, parsing, and content negotiation.
+
+View Layer – Uses APIView, Generic Views, or ViewSets to handle business logic.
+
+Serializer Layer – Converts complex data (models/querysets) into JSON and validates incoming data.
+
+Authentication & Permission Layer – Ensures security before processing the request.
+
+Renderer Layer – Converts Python data into response formats like JSON.
+
+# How does the DRF request lifecycle work?
+
+The DRF request lifecycle describes how a request is processed from client to response.
+
+Request enters Django – The URL router maps the request to the correct DRF view.
+
+Request wrapping – DRF converts Django’s request into a Request object and performs authentication, throttling, and permission checks.
+
+Parsing – The request body is parsed (e.g., JSONParser) into Python data.
+
+View execution – The appropriate method (get, post, etc.) runs business logic.
+
+Serialization – Data is validated (for input) or converted to JSON (for output).
+
+Rendering response – The response is passed to a renderer (usually JSON) and sent back to the client.
+
+# What are different authentication classes in DRF?
+In Django REST Framework, authentication classes define how the system verifies the identity of a user. Common authentication classes are:
+SessionAuthentication – Uses Django’s session framework and cookies. Mostly used for web applications.
+BasicAuthentication – Sends username and password in the request header (Base64 encoded). Simple but not recommended for production without HTTPS.
+TokenAuthentication – Uses a token stored in the database. The client sends it in the Authorization: Token <key> header.
+JWT Authentication (via third-party packages like SimpleJWT) – Uses signed JSON Web Tokens, which are stateless and scalable.
+
+# What is the difference between BasicAuth, TokenAuth, and JWT?
+
+The main difference between BasicAuth, TokenAuth, and JWT is how they send and manage credentials.
+
+Basic Authentication – Sends username and password with every request (Base64 encoded in header). It is simple but less secure unless used over HTTPS, and not ideal for APIs.
+
+Token Authentication – After login, the server generates a token stored in the database. The client sends this token in the header (Authorization: Token <key>). It is more secure than BasicAuth and avoids sending credentials repeatedly.
+
+JWT (JSON Web Token) – After login, the server issues a signed token containing user information. It is stateless, meaning no session or token storage is required on the server. It scales better in distributed systems.
+
+# What are mixins in DRF and why are they used?
+In DRF, mixins are small reusable classes that provide specific functionality like create, list, retrieve, update, and destroy. They are not complete views by themselves but are combined with GenericAPIView to build full CRUD behavior.
+
+For example, ListModelMixin provides a list() method, and CreateModelMixin provides a create() method.
+        
+        from rest_framework import mixins, generics
+        
+        class BookView(mixins.ListModelMixin,
+                       mixins.CreateModelMixin,
+                       generics.GenericAPIView):
+            queryset = Book.objects.all()
+            serializer_class = BookSerializer
+
+# What is the difference between GenericAPIView and APIView?
+The main difference between APIView and GenericAPIView in DRF is the level of built-in functionality.
+
+APIView is the base class. You manually define methods like get(), post(), and handle queryset and serializer logic yourself. It gives full control but requires more code.
+
+GenericAPIView extends APIView and adds support for queryset, serializer_class, pagination, filtering, and lookup fields. It is usually combined with mixins to quickly build CRUD APIs.
+
+# How do routers work in DRF?
+
+In DRF, routers automatically generate URL patterns for ViewSets, reducing manual URL configuration.
+
+When you register a ViewSet with a router, it maps standard actions like list, create, retrieve, update, and destroy to corresponding HTTP methods and URLs.
+        
+        from rest_framework.routers import DefaultRouter
+        
+        router = DefaultRouter()
+        router.register(r'books', BookViewSet)
+        urlpatterns = router.urls
+
+This automatically creates routes like:
+
+GET /books/ → list
+POST /books/ → create
+GET /books/{id}/ → retrieve
+
+# What is DefaultRouter vs SimpleRouter?
+
+Both SimpleRouter and DefaultRouter in DRF automatically generate URL routes for ViewSets, but they differ slightly in features.
+SimpleRouter generates standard RESTful routes like list, create, retrieve, update, and delete. It does not include any extra endpoints.
+DefaultRouter extends SimpleRouter and additionally provides a root API view, which lists all registered endpoints at the base URL. This makes API discovery easier.
+
+# How do you customize API responses in DRF?
+
+You can customize API responses in DRF at multiple levels depending on the requirement.
+
+Inside the view – Modify the response structure manually using the Response object.
+
+        return Response({
+            "status": "success",
+            "data": serializer.data
+        })
+Override serializer to_representation() – Customize how model data is converted to JSON.
+Custom exception handler – Define a global exception handler to standardize error responses.
+
+Custom renderer – Create a custom renderer class to control the final output format.
+
+
+# How do you override serializer create() and update() methods?
+
+In DRF, you override create() and update() methods in a serializer when you need custom save logic beyond the default behavior. This is commonly done in ModelSerializer.
+Override create() – Used when creating a new object:
+
+        class BookSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = Book
+                fields = '__all__'
+        
+            def create(self, validated_data):
+                return Book.objects.create(**validated_data)
+
+Override update() – Used when updating an existing object:
+
+            def update(self, instance, validated_data):
+                instance.title = validated_data.get('title', instance.title)
+                instance.save()
+                return instance
+# How do you handle file uploads in DRF?
+
+In DRF, file uploads are handled using FileField or ImageField in serializers and models. The request must use multipart/form-data content type.
+
+        class Document(models.Model):
+            file = models.FileField(upload_to='uploads/')
+
+Serializer
+
+        class DocumentSerializer(serializers.ModelSerializer):
+            class Meta:
+                model = Document
+                fields = '__all__'
+
+In the view, ensure proper parser classes:
+
+        parser_classes = [MultiPartParser, FormParser]
+
+# How do you implement filtering in DRF?
+Filtering in DRF is implemented using filter backends, which allow clients to filter querysets using query parameters.
+Basic filtering – Override get_queryset() manually:
+
+        def get_queryset(self):
+            queryset = Book.objects.all()
+            author = self.request.query_params.get('author')
+            if author:
+                queryset = queryset.filter(author=author)
+            return queryset
+
+Using django-filter (recommended) –
+Install django-filter and configure:
+
+        filter_backends = [DjangoFilterBackend]
+        filterset_fields = ['author', 'published_year']
+
+Then use: /api/books/?author=John
+Search and ordering filters –
+
+        filter_backends = [SearchFilter, OrderingFilter]
+        search_fields = ['title']
+        ordering_fields = ['published_year']
+
+# How do you implement role-based access control (RBAC) in DRF?
+
+Role-Based Access Control (RBAC) in DRF is implemented by assigning roles to users and restricting access based on those roles using permissions.
+Using Django Groups – Assign users to groups like Admin, Editor, Viewer.
+Custom permission class – Check the user’s role inside has_permission().
+
+        from rest_framework.permissions import BasePermission
+        
+        class IsAdminRole(BasePermission):
+            def has_permission(self, request, view):
+                return request.user.groups.filter(name='Admin').exists()
+
+Apply in view:
+
+        permission_classes = [IsAdminRole]
+
+# How do you secure sensitive fields in serializers?
+
+Sensitive fields in serializers must be protected to prevent data leaks or unauthorized modification.
+Use write_only=True – For fields like passwords so they are accepted in input but not returned in response.
+
+        password = serializers.CharField(write_only=True)
+
+Use read_only=True – For fields that should not be modified by users (e.g., id, created_at).
+Exclude fields – Avoid exposing sensitive model fields like is_superuser, last_login, etc.
+Override to_representation() – Customize output to remove or mask sensitive data.
+Hash passwords properly – Use set_password() instead of saving raw passwords.
+
+# When should you not use DRF?
+
+You should avoid using Django REST Framework (DRF) when building a full REST API is unnecessary or adds extra complexity.
+1️⃣ When You Are Building a Simple Server-Rendered Website
+If your project only returns HTML pages using Django templates (no separate frontend like React or Angular), then normal Django views are enough. DRF is mainly useful when building APIs, not traditional web pages.
+2️⃣ When Performance Is Extremely Critical
+DRF adds extra layers like serializers, authentication classes, and renderers. For very high-performance or lightweight microservices, plain Django views or frameworks like FastAPI may be faster.
+3️⃣ When You Don’t Need an API
+If your application does not expose data to mobile apps, frontend frameworks, or third-party clients, then using DRF may be overengineering.
+4️⃣ When the Project Is Very Small
+For a small internal tool with limited endpoints, plain Django JSON responses (JsonResponse) are often simpler and quicker to implement.
+
+
 
 ---
 
