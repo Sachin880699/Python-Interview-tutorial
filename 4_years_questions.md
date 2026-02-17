@@ -495,6 +495,169 @@ Real-time applications – Django wasn’t originally built for real-time featur
 
 Steep learning curve for advanced features – Features like signals, middleware, and class-based views can be confusing for beginners.
 
+
+
+
+#  1. What is the Django architecture (MVT pattern)?
+
+Django follows the MVT (Model-View-Template) pattern.
+
+Model handles database structure and business logic.
+
+View contains the request handling logic.
+
+Template handles presentation (HTML rendering).
+
+Unlike MVC, Django’s View acts like a Controller, and Template acts like the View layer.
+
+# 2. What happens internally when a Django request is received?
+
+Request hits the web server (like Gunicorn).
+It passes to Django via WSGI/ASGI.
+Middleware processes the request.
+URL dispatcher matches the URL to a view.
+View executes logic and interacts with models.
+Response passes back through middleware and returns to the client.
+
+# 3. How does Django middleware work?
+
+Middleware is a layer between request and response processing.
+It can modify request before it reaches the view and response before it goes to the client.
+It is executed in order defined in MIDDLEWARE setting.
+Common uses: authentication, logging, security checks.
+
+# 4. What is the difference between WSGI and ASGI in Django?
+
+WSGI handles synchronous requests only.
+
+ASGI supports asynchronous requests, WebSockets, and long-lived connections.
+
+WSGI is suitable for traditional apps, while ASGI is better for real-time features like chat applications.
+
+# 5. How does Django ORM translate queries into SQL?
+
+Django ORM converts Python QuerySet operations into SQL queries.
+When a QuerySet is evaluated, Django builds SQL using its query compiler.
+The database adapter executes SQL and returns results.
+Developers don’t write raw SQL unless necessary.
+
+# 6. What are QuerySets and how are they evaluated?
+
+QuerySets represent a collection of database queries.
+They are lazy-loaded, meaning SQL is executed only when data is needed.
+Evaluation happens during iteration, slicing, len(), or conversion to list.
+This improves performance by delaying database access.
+
+# 7. What is the difference between select_related and prefetch_related?
+
+select_related performs SQL JOIN and fetches related objects in a single query. Best for ForeignKey/OneToOne.
+
+prefetch_related performs separate queries and joins in Python. Best for ManyToMany or reverse relations.
+
+Both reduce N+1 query problems.
+
+# 8. How do Django migrations work internally?
+
+Django tracks model changes in migration files.
+It compares current models with previous migration state.
+Generates SQL to apply schema changes.
+Migration history is stored in django_migrations table.
+
+# 9. How do you handle migration conflicts in a team environment?
+
+Conflicts happen when multiple developers create migrations on same app.
+Use makemigrations --merge to resolve conflicts.
+Always pull latest changes before creating new migrations.
+Review migration files carefully before pushing.
+
+# 10. What are Django signals and when should you avoid them?
+
+Signals allow decoupled apps to get notified when actions occur (like post_save).
+They are useful for triggering side effects.
+Avoid signals for complex business logic because they reduce code readability and debugging becomes harder.
+
+# 11. How does Django handle caching?
+
+Django supports multiple caching backends like memory, Redis, Memcached.
+Caching can be applied per-view, template fragment, or low-level API.
+It reduces database load and improves performance.
+Configured via CACHES setting.
+
+# 12. How do you optimize a slow Django application?
+
+Use select_related and prefetch_related.
+
+Add proper database indexes.
+
+Use caching.
+
+Analyze queries using Django Debug Toolbar.
+
+Avoid unnecessary database hits inside loops.
+
+# 13. What are Django model managers and when would you create a custom manager?
+
+Managers control database query operations (objects).
+Custom managers are used when you want reusable filtered queries.
+Example: active_users = User.objects.filter(is_active=True)
+They improve code reusability and readability.
+
+# 14. What is the difference between abstract models and multi-table inheritance?
+
+Abstract model: No separate database table. Fields are inherited.
+
+Multi-table inheritance: Each model has its own database table.
+
+Use abstract models for shared fields. Use multi-table when models need separate identity.
+
+# 15. How does Django handle security (CSRF, XSS, SQL injection)?
+
+CSRF: Uses CSRF tokens in forms.
+
+XSS: Templates auto-escape HTML.
+
+SQL Injection: ORM uses parameterized queries.
+
+Django provides built-in security protections by default.
+
+# 16. How do you implement custom authentication in Django?
+
+Create a custom User model (extend AbstractUser or AbstractBaseUser).
+Define authentication backend.
+Update AUTH_USER_MODEL in settings.
+Customize login logic if required.
+
+# 17. What are Django forms and how do they differ from serializers?
+
+Forms are used for handling HTML form input and validation.
+Serializers (in DRF) are used for converting complex data to JSON and vice versa.
+Forms are mainly for server-rendered apps, serializers for APIs.
+
+# 18. How do you scale a Django application in production?
+
+Use load balancers.
+
+Deploy multiple app instances.
+
+Use caching and CDN.
+
+Optimize database with replication.
+
+Use async processing (Celery for background tasks).
+
+# 19. What is Django’s settings structure and why use multiple settings files?
+
+Settings contain configuration like database, apps, middleware.
+Multiple settings files (base, dev, prod) separate environment configurations.
+Improves security and maintainability.
+
+# 20. What are common production issues in Django and how do you debug them?
+
+Common issues: slow queries, memory leaks, misconfigured static files.
+Use logging, monitoring tools, and APM tools.
+Check database queries and server logs.
+Reproduce issues in staging before fixing in production.
+
 ---
 
 ## Django ORM / Database
