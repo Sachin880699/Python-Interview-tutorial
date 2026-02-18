@@ -1805,3 +1805,215 @@ Secret managers (AWS Secrets Manager / Vault / Kubernetes Secrets)
             }
         }
 
+## GITHUB
+
+# You are on `development` branch and need to create a new feature branch. What commands will you run?
+
+If I am on the development branch and need to create a new feature branch, I first ensure my branch is updated with the latest remote changes. Then I create and switch to a new feature branch using -b.
+This ensures my feature work starts from the latest development code.
+
+        git checkout development
+        git pull origin development
+        git checkout -b feature/user-authentication
+
+# How do you pull latest changes from remote without creating unnecessary merge commits?
+
+To pull the latest changes without creating unnecessary merge commits, I use rebase instead of merge. This keeps the commit history clean and linear.
+By default, git pull performs a merge, which creates a merge commit. To avoid that, I use --rebase.
+
+        git pull --rebase origin development
+
+# 3. What is the difference between `git merge` and `git rebase` in real project workflow?
+In real project workflow, git merge combines two branches and creates a merge commit, preserving full history. It is safe and commonly used when merging feature branches into main or development.
+
+git rebase moves your commits on top of another branch, creating a clean and linear history without extra merge commits. It rewrites commit history.
+
+In practice, I use rebase for updating my feature branch with latest main, and merge when finalizing PR to maintain safe shared history
+
+# 4. You have merge conflicts while pulling code. What exact steps will you follow?
+
+If I get merge conflicts while pulling, I first check which files have conflicts using `git status`. Git marks conflicted sections inside files with `<<<<<<<`, `=======`, `>>>>>>>`.
+
+I manually open those files, resolve the conflicts carefully, and remove the conflict markers. After fixing, I stage the resolved files.
+
+If it was a normal merge:
+        
+        ```bash
+        git add .
+        git commit
+        ```
+
+If it was a rebase:
+        
+        ```bash
+        git add .
+        git rebase --continue
+        ```
+
+Finally, I test the application before pushing changes.
+
+# 5. How do you update your feature branch with latest changes from `main`?
+
+To update my feature branch with the latest changes from main, I first switch to my feature branch and fetch the latest code from remote. Then I rebase or merge main into my branch.
+
+I usually prefer rebase to keep history clean.
+Using rebase
+
+        git checkout feature/my-feature
+        git fetch origin
+        git rebase origin/main
+
+If conflicts occur, I resolve them and run git rebase --continue. This keeps my branch updated with latest main changes.
+
+# 6. You accidentally committed directly to `main`. How will you fix it safely?
+
+If I accidentally committed directly to `main`, I first check whether the commit is pushed or not.
+
+✅ If NOT pushed:
+
+I create a new feature branch from that commit and reset `main` back.
+
+```bash
+git checkout -b feature/my-work
+git checkout main
+git reset --hard origin/main
+```
+
+---
+
+ ✅ If already pushed:
+
+I avoid `reset` (because it rewrites history). Instead, I use **revert**:
+
+```bash
+git revert <commit_id>
+git push origin main
+```
+
+This safely removes the changes without breaking shared history.
+
+# 7. How do you undo the last commit but keep the changes in your working directory?
+
+To undo the last commit but keep the changes in my working directory, I use **`git reset --soft HEAD~1`**. This removes the last commit but keeps all changes staged.
+
+If I want the changes unstaged but still in working directory, I use `--mixed` (default).
+
+**Command (keep changes staged):**
+
+```bash
+git reset --soft HEAD~1
+```
+
+This allows me to modify the changes or recommit with a better message without losing any work.
+
+# 9. How do you change the last commit message after committing?
+
+To change the last commit message after committing (but **before pushing**), I use:
+
+```bash
+git commit --amend -m "New commit message"
+```
+
+This rewrites the last commit with the updated message while keeping the changes intact.
+
+> ⚠️ If the commit is already pushed, you’ll need to force push carefully:
+
+```bash
+git push --force origin branch-name
+```
+
+…but only do this if you are sure nobody else has pulled the old commit.
+
+# 12. What is interactive rebase and when would you use it?
+
+**Interactive rebase** (`git rebase -i`) lets you **rewrite, reorder, squash, or edit multiple commits** before merging to main, keeping history clean and readable.
+
+I use it when I want to:
+
+* Combine multiple small commits into one (`squash`)
+* Reorder commits logically
+* Edit commit messages before raising a PR
+
+**Example:**
+
+```bash
+git checkout feature/my-feature
+git rebase -i HEAD~5
+```
+
+This opens the last 5 commits in an editor, where I can pick, squash, or edit each commit. It’s very useful for preparing clean commits before merging.
+
+# 15. You deleted a branch accidentally. How can you recover it?
+
+If I deleted a branch accidentally, I can recover it using **`git reflog`**, which tracks all recent HEAD positions.
+
+Steps:
+
+1. Find the commit where the branch was last pointing:
+
+```bash
+git reflog
+```
+
+2. Identify the commit hash of the deleted branch.
+
+3. Recreate the branch at that commit:
+
+```bash
+git checkout -b feature/my-branch <commit_hash>
+```
+
+Now the branch is restored exactly where it was before deletion.
+
+# 21. What is the difference between `git fetch` and `git pull`?
+
+The difference is in **what happens after fetching**:
+
+* **`git fetch`** downloads the latest changes from the remote **without merging** them into your local branch. It updates remote tracking branches only, letting you review changes first.
+
+* **`git pull`** does a **fetch + merge** (or fetch + rebase if `--rebase` is used) in one step, updating your current branch automatically.
+
+**Example:**
+
+```bash
+git fetch origin           # Only downloads updates
+git merge origin/main      # Manually merge after fetch
+
+# vs
+
+git pull origin main       # Fetches and merges in one step
+```
+
+Use `fetch` when you want **more control**; use `pull` for quick updates.
+
+# 23. How do you remove a file from Git but keep it in your local system?
+
+To remove a file from Git **but keep it locally**, I use the `--cached` option. This untracks the file without deleting it from my working directory.
+
+**Command:**
+
+```bash
+git rm --cached filename.txt
+git commit -m "Stop tracking filename.txt"
+```
+
+This is commonly used for files like `.env` or logs that were accidentally committed.
+
+> Tip: After this, add the file to `.gitignore` to prevent it from being tracked again.
+
+# 26. What is the difference between `origin` and `upstream`?
+
+* **`origin`** is the default name for the remote repository you **cloned from**. It usually points to your own fork or the main repository you push to.
+
+* **`upstream`** is an optional remote that points to the **original repository** you forked from. It’s used to fetch updates from the main source without affecting your `origin`.
+
+**Example workflow for forks:**
+
+```bash
+git remote add upstream https://github.com/original/repo.git
+git fetch upstream
+git merge upstream/main
+```
+
+This lets you keep your fork (`origin`) up-to-date with the original repo (`upstream`).
+
