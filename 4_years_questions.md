@@ -1332,412 +1332,476 @@ If your application does not expose data to mobile apps, frontend frameworks, or
 For a small internal tool with limited endpoints, plain Django JSON responses (JsonResponse) are often simpler and quicker to implement.
 
 
+## Practical
 
----
+# 1. Your Django model has millions of records and queries are slow. How would you diagnose and improve performance?
 
-## MySQL / Database
+When a Django model has millions of records and queries become slow, I first diagnose the issue using Django Debug Toolbar and check the generated SQL query with queryset.query or database EXPLAIN. This helps me see if full table scans are happening.
+Then I optimize by adding proper database indexes on frequently filtered fields using db_index=True or Meta.indexes. I also use select_related() and prefetch_related() to reduce extra queries.
+If large data is being loaded, I use only(), values(), or pagination to fetch limited data.
 
-1. Explain ACID properties.
-2. How does an index work internally?
-3. B-tree vs hash index.
-4. Primary key vs unique key.
-5. Pros and cons of foreign key constraints.
-6. Normalization vs denormalization.
-7. What is a deadlock?
-8. Transaction isolation levels.
-9. Repeatable read vs read committed.
-10. How do you debug slow queries?
-11. Explain EXPLAIN query output.
-12. When does a full table scan occur?
-13. Why is pagination costly in SQL?
-14. Problems with OFFSET-based pagination.
-15. Cursor-based pagination.
-16. Data consistency vs performance trade-off.
-17. Database connection leaks.
-18. Backup strategies.
-19. Risks in migration rollback.
-20. MySQL vs PostgreSQL.
+# 2. You notice an N+1 query problem in a view or API. How do you detect and fix it?
+I detect an N+1 query problem using tools like Django Debug Toolbar or by checking query logs in the console. If I see 1 query for main data and then multiple queries for related objects inside a loop, it indicates N+1 issue.
+To fix it, I use select_related() for ForeignKey/OneToOne fields and prefetch_related() for ManyToMany or reverse relations. This reduces multiple queries into one or two optimized queries.
+For example, if I loop through orders and access order.customer.name, it may run extra queries. Using Order.objects.select_related('customer') fetches all data in a single query and improves performance.
 
----
+# 4. A POST API is creating duplicate records due to client retries. How would you make the endpoint idempotent?
+If a POST API is creating duplicate records due to retries, I make it idempotent by introducing a unique identifier like an idempotency key or unique constraint in the database.
+I can ask the client to send a unique request_id with every request and store it in the database with unique=True. Before creating a new record, I check if that request_id already exists.
+Another approach is using get_or_create() or adding a unique constraint on important fields.
+For example, in a payment API, if the same transaction_id is received twice, the API should return the existing record instead of creating a new one.
 
-## Multithreading & Multiprocessing
+# 5. An API endpoint is under heavy traffic and response time is degrading. What optimization steps would you take?
+If an API is under heavy traffic and response time is slow, I first identify the bottleneck using logging, APM tools, and database query analysis. I check whether the delay is from database queries, external APIs, or business logic.
+Then I optimize database queries using indexing, select_related(), and pagination. I also implement caching using Redis or Django cache framework for frequently requested data.
+If processing is heavy, I move it to background tasks using Celery.
+For example, if a product list API is called frequently, I cache the response for a few minutes to reduce database load and improve response time.
 
-1. Difference between thread and process.
-2. Limitations of Python threading.
-3. Explain GIL clearly.
-4. I/O-bound vs CPU-bound examples.
-5. When does threading help?
-6. When is multiprocessing better?
-7. When should Celery be used?
-8. Worker vs thread.
-9. Role of Queue in threading.
-10. Lock usage with example.
-11. Deadlock scenario.
-12. What is a daemon thread?
-13. What is thread-safe code?
-14. Shared memory problems.
-15. How do processes communicate?
-16. What is a Pool in multiprocessing?
-17. How do you handle exceptions in threads?
-18. Async vs threading.
-19. Django + Celery architecture.
-20. Handling background job failures.
+# 7. A database migration failed in production. What exact recovery steps would you follow?
+If a migration fails in production, first I check the error logs and identify at which migration it failed using python manage.py showmigrations. I do not run random fixes directly on production.
+If the migration partially applied, I verify the database state and compare it with Django migration history table (django_migrations).
+If safe, I rollback to the previous stable migration using python manage.py migrate app_name previous_migration. If data is affected, I take a backup before making changes.
+For example, if a column was added but migration failed halfway, I either manually fix the schema or mark migration as fake using --fake only after confirming database state is correct.
 
----
+# 8. How would you implement efficient pagination for an API serving millions of rows?
+If migration fails, I first check the error and migration status using showmigrations. I verify database state before taking action. I take a backup before fixing anything.
+If migration is partially applied, I either rollback or use --fake only after confirming schema is correct.
 
-## Performance & Scaling
+        python manage.py showmigrations
+        python manage.py migrate myapp 0005_previous_migration
 
-1. First steps when a Django app becomes slow.
-2. How do you identify DB vs code bottlenecks?
-3. Caching strategies.
-4. When to use Redis?
-5. Per-view vs low-level caching.
-6. How do you calculate Gunicorn workers?
-7. Horizontal vs vertical scaling.
-8. Basics of load balancing.
-9. Why should APIs be stateless?
-10. CDN usage.
-11. Logging overhead concerns.
-12. Monitoring tools.
-13. How do you detect memory leaks in production?
-14. Handling API timeouts.
-15. What is graceful shutdown?
+If column already exists but migration failed:
 
----
+        python manage.py migrate myapp 0006 --fake
 
-## Testing & Quality (Additional)
+Efficient Pagination for Millions of Rows
+For large datasets, I avoid offset pagination and use CursorPagination because it performs better on large tables. It works using indexed fields like id or created_at.
 
-1. Difference between unit test and integration test.
-2. How do you test Django views?
-3. How do you test DRF APIs?
-4. What is mocking and why is it needed?
-5. How do you mock external APIs?
-6. Test database vs production database.
-7. What is pytest vs unittest?
-8. What is test coverage?
-9. How much test coverage is enough?
-10. Common testing mistakes in Django projects.
-11. How do you test authentication and permissions?
-12. How do you test background tasks (Celery)?
-13. What should not be tested?
-14. How do you write testable code?
-15. CI/CD impact on testing.
+        # pagination.py
+        from rest_framework.pagination import CursorPagination
+        
+        class LargeDataPagination(CursorPagination):
+            page_size = 20
+            ordering = '-created_at'
 
----
+Views.py
 
-## Deployment & DevOps Basics (Additional)
 
-1. How do you deploy a Django application?
-2. What is Gunicorn and why is it used?
-3. Nginx role in Django deployment.
-4. WSGI vs ASGI in deployment.
-5. Environment-specific settings.
-6. How do you manage secrets in production?
-7. What is Docker and why use it?
-8. Dockerfile vs docker-compose.
-9. Zero-downtime deployment strategy.
-10. Handling migrations during deployment.
-11. Static files handling in production.
-12. Media files handling in production.
-13. Rollback strategy after failed deployment.
-14. What is CI/CD pipeline?
-15. Common deployment mistakes.
+        from rest_framework.generics import ListAPIView
+        from .models import Order
+        from .serializers import OrderSerializer
+        from .pagination import LargeDataPagination
+        
+        class OrderListView(ListAPIView):
+            queryset = Order.objects.all()
+            serializer_class = OrderSerializer
+            pagination_class = LargeDataPagination
 
----
 
-## System Design (Python/Django Focus)
+# 9. A third-party API call inside your view is slowing down responses. How would you redesign the flow?
 
-1. Design a simple user authentication system.
-2. Design a REST API for file upload.
-3. Design a rate-limited API.
-4. Design a background job processing system.
-5. How would you design email sending service?
-6. Design a notification system.
-7. Design pagination for large datasets.
-8. Design caching layer for APIs.
-9. Design audit logging system.
-10. Design role-based access control.
-11. How do you scale read-heavy APIs?
-12. How do you handle high write load?
-13. Designing idempotent APIs.
-14. Designing retry mechanism.
-15. Designing fault-tolerant services.
+If a third-party API inside a view is slowing responses, I first confirm delay using logs or APM to check response time. Direct synchronous calls increase API latency, so I redesign it to be asynchronous.
+I move the third-party call to a background task using Celery, so the main API responds immediately. I also add timeout and retry logic to handle failures.
+If data does not change frequently, I cache the response to reduce repeated calls.
 
----
+task.py
 
-## Production & Real-World Scenarios (Very Important)
+        # tasks.py
+        from celery import shared_task
+        import requests
+        
+        @shared_task
+        def fetch_payment_status(order_id):
+            response = requests.get("https://thirdparty.com/api/status", timeout=5)
+            # process response
 
-1. A migration broke production. What do you do?
-2. API response time suddenly doubled. How do you debug?
-3. Database CPU is high. What are your steps?
-4. Memory usage keeps increasing. How do you investigate?
-5. Users report random logout issues.
-6. Background jobs are failing silently.
-7. Duplicate records are getting created.
-8. Data inconsistency between services.
-9. Handling partial failures in APIs.
-10. How do you handle backward incompatible changes?
-11. Handling traffic spikes.
-12. Debugging issues without logs.
-13. Hotfix vs proper fix decision.
-14. Handling long-running requests.
-15. Handling timezone-related bugs.
+views.py
 
----
+        # views.py
+        def create_order(request):
+            order = Order.objects.create(...)
+            fetch_payment_status.delay(order.id)  # async call
+            return Response({"message": "Order created"})
 
-## Behavioral (Technical-Focused)
+# 10. How would you introduce caching in Django for maximum performance gain?
 
-1. A senior disagrees with your implementation. What do you do?
-2. You missed a production bug. How do you handle it?
-3. How do you review someone else's code?
-4. How do you handle pressure during production incidents?
-5. How do you estimate task timelines?
-6. How do you handle unclear requirements?
-7. How do you prioritize bugs vs features?
-8. How do you explain technical debt to non-technical people?
-9. How do you mentor juniors?
-10. Biggest technical mistake you made and learned from.
+To introduce caching for maximum performance, I first identify high-read and less frequently changing data like product lists or dashboard data. I avoid caching dynamic or user-specific sensitive data.
+In Django, I use Redis with Django cache framework because it is fast and supports distributed systems. I can cache at view level, template level, or low-level (manual caching).
+For example, caching a product list API for 5 minutes reduces database load significantly.
 
----
+settings.py
 
-## API Design & Integration (Additional)
+        # settings.py
+        CACHES = {
+            "default": {
+                "BACKEND": "django.core.cache.backends.redis.RedisCache",
+                "LOCATION": "redis://127.0.0.1:6379/1",
+            }
+        }
 
-1. How do you design APIs for backward compatibility?
-2. How do you handle partial success responses?
-3. What is HATEOAS? Have you used it?
-4. How do you design bulk APIs?
-5. How do you handle idempotency keys?
-6. API timeout vs long polling.
-7. Webhooks vs polling.
-8. How do you secure webhooks?
-9. How do you design retry-safe APIs?
-10. How do you version APIs without breaking clients?
-11. Handling third-party API failures.
-12. Circuit breaker pattern.
-13. API gateway role.
-14. Rate limiting strategies.
-15. API contract testing.
+views.py
+        
+        # views.py
+        from django.core.cache import cache
+        
+        def product_list(request):
+            data = cache.get("product_list")
+            if not data:
+                data = list(Product.objects.values())
+                cache.set("product_list", data, timeout=300)  # 5 minutes
+            return JsonResponse(data, safe=False)
 
----
+# 12. Your Django app works locally but is slow in production. What is your step-by-step debugging approach?
 
-## Data Modeling & Architecture (Additional)
+If the Django app is slow in production but fast locally, I first compare environment differences like DEBUG mode, database size, server resources, and network latency. Production usually has larger data and real traffic.
+Next, I check logs and APM tools (like New Relic) to identify whether the issue is database queries, external APIs, or CPU/memory usage. I analyze slow queries using database logs and EXPLAIN.
+Then I verify configuration issues like missing indexes, improper Gunicorn worker count, or static files not served via Nginx.
+For example, if a query is fast locally but slow in production, I check if the production database is missing an index and add it to improve performance.
 
-1. How do you design database schema from requirements?
-2. When do you choose NoSQL over SQL?
-3. How do you handle schema evolution?
-4. Soft delete vs hard delete.
-5. Audit tables design.
-6. Multi-tenant database design.
-7. Sharding basics.
-8. Read-heavy vs write-heavy schema design.
-9. Handling large tables.
-10. UUID vs auto-increment IDs.
-11. Handling historical data.
-12. Data migration strategy.
-13. Referential integrity vs performance.
-14. Designing for analytics vs transactions.
-15. Handling data privacy requirements.
+# 15. How would you handle large file uploads (hundreds of MBs) efficiently in Django?
+To handle large file uploads (hundreds of MBs), I avoid loading the entire file into memory. Django supports streaming uploads using FILE_UPLOAD_MAX_MEMORY_SIZE and temporary file handling.
+I configure Django to store large files directly on disk and use chunk-based processing to prevent memory issues. For better scalability, I upload files directly to cloud storage like AWS S3 instead of saving on the app server.
+I also add file size validation and background processing for heavy tasks.
 
----
+        def upload_file(request):
+            file = request.FILES['file']
+            with open('large_file.bin', 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+            return HttpResponse("Uploaded successfully")
 
-## Security (Advanced)
+# 16. Your site crashes during sudden traffic spikes. What scaling strategy would you apply?
 
-1. OWASP Top 10 relevance to Django.
-2. How do you prevent SQL injection in Django?
-3. How do you prevent XSS?
-4. CSRF attack flow.
-5. Token storage best practices.
-6. Password hashing algorithms.
-7. Secrets rotation strategy.
-8. Role-based vs attribute-based access control.
-9. API key management.
-10. Preventing brute force attacks.
-11. Security headers usage.
-12. HTTPS enforcement.
-13. Handling sensitive data in logs.
-14. Security testing approaches.
-15. Handling security incidents.
+If the site crashes during traffic spikes, I first check server metrics (CPU, memory, DB connections) to identify the bottleneck. Then I apply horizontal scaling instead of only increasing one server’s size.
+I deploy multiple app instances behind a load balancer (like Nginx or AWS ELB) to distribute traffic. I also move sessions and caching to Redis so all instances share the same data.
+Database scaling can include read replicas for heavy read traffic. I also enable auto-scaling in cloud environments.
+For example, if 1 server handles 1,000 users, adding 3 more servers behind a load balancer allows handling 4,000+ users without crashing.
 
----
+# 17. How would you implement role-based access control (RBAC) in a Django project?
+To implement RBAC in Django, I use Django’s built-in User, Group, and Permission system. I create different roles using Group (like Admin, Manager, Employee) and assign specific permissions to each group.
+Then I assign users to groups, so access control is managed at role level instead of individual users. In views, I use decorators like @permission_required or DRF permission classes.
+If needed, I create custom permissions for fine-grained control.
 
-## Code Quality & Maintainability
+        # create role
+        from django.contrib.auth.models import Group, Permission
+        
+        manager_group = Group.objects.create(name="Manager")
+        permission = Permission.objects.get(codename="view_order")
+        manager_group.permissions.add(permission)
 
-1. What makes code readable?
-2. How do you reduce cyclomatic complexity?
-3. Refactoring strategy.
-4. Handling legacy code.
-5. Code review best practices.
-6. Common code smells.
-7. Dependency management.
-8. Handling breaking changes.
-9. Writing self-documenting code.
-10. Documentation importance.
-11. Managing large Django projects.
-12. Modularization strategies.
-13. Avoiding tight coupling.
-14. Backward compatibility in code.
-15. Technical debt management.
+views.py
 
----
+        # protect view
+        from django.contrib.auth.decorators import permission_required
+        
+        @permission_required('app.view_order')
+        def order_list(request):
+            ...
 
-# Python, Django Interview Questions – Advanced / Part 2
+# 19. How would you securely implement JWT authentication in Django REST Framework?
 
----
+To securely implement JWT authentication in Django REST Framework, I use djangorestframework-simplejwt because it provides secure token handling with access and refresh tokens. I configure short expiry for access tokens and enable refresh token rotation for better security.
+I also enforce HTTPS, store tokens securely (HTTP-only cookies if possible), and validate permissions using DRF permission classes.
 
-## Distributed Systems (Advanced)
+        # settings.py
+        REST_FRAMEWORK = {
+            'DEFAULT_AUTHENTICATION_CLASSES': (
+                'rest_framework_simplejwt.authentication.JWTAuthentication',
+            ),
+        }
 
-1. What is a distributed system?
-2. CAP theorem and real-world trade-offs.
-3. Consistency vs availability.
-4. Eventual consistency examples.
-5. Synchronous vs asynchronous communication.
-6. Message queues vs REST APIs.
-7. Kafka vs RabbitMQ basics.
-8. Exactly-once vs at-least-once delivery.
-9. Handling duplicate messages.
-10. Designing idempotent consumers.
-11. Distributed transactions problems.
-12. Saga pattern basics.
-13. Service discovery.
-14. Circuit breaker pattern.
-15. Backpressure handling.
+urls.py
 
----
+        # urls.py
+        from rest_framework_simplejwt.views import TokenObtainPairView, TokenRefreshView
+        
+        urlpatterns = [
+            path('api/token/', TokenObtainPairView.as_view()),
+            path('api/token/refresh/', TokenRefreshView.as_view()),
+        ]
 
-## Caching Deep Dive
+# 20. You need to run heavy background tasks (emails, reports) without blocking requests. How would you design it?
+To run heavy background tasks without blocking requests, I use Celery with Redis or RabbitMQ as a message broker. This allows tasks like emails or report generation to run asynchronously in separate worker processes.
+The main API only triggers the task and immediately returns a response, improving user experience and performance. I also configure retries and time limits for reliability.
 
-1. Cache-aside vs write-through.
-2. Cache invalidation strategies.
-3. Cache stampede problem.
-4. TTL tuning.
-5. Redis data structures.
-6. Redis persistence options.
-7. Redis eviction policies.
-8. Hot key problem.
-9. Distributed cache consistency.
-10. When caching hurts performance.
-11. API-level caching vs DB caching.
-12. Per-user cache design.
-13. Cache warming strategies.
-14. Handling stale data.
-15. Monitoring cache efficiency.
+task.py
 
----
+        # tasks.py
+        from celery import shared_task
+        from django.core.mail import send_mail
+        
+        @shared_task
+        def send_welcome_email(user_email):
+            send_mail("Welcome", "Thanks for joining!", "from@test.com", [user_email])
 
-## Django Internals (Advanced)
+views.py
 
-1. How Django URL resolver works internally.
-2. Django ORM query compilation.
-3. How QuerySets are evaluated.
-4. Django app loading process.
-5. Signal dispatch mechanism.
-6. Middleware execution chain.
-7. Django template rendering flow.
-8. How Django handles sessions.
-9. Cookie vs session storage.
-10. Django authentication backend flow.
-11. Permission checks internally.
-12. How Django handles file uploads.
-13. Static file collection process.
-14. Django startup time optimization.
-15. Django internals limitations.
+        # views.py
+        def register_user(request):
+            user = User.objects.create(...)
+            send_welcome_email.delay(user.email)  # async call
+            return Response({"message": "User created"})
 
----
+# 22. A bug appears only in production but not locally. How would you systematically investigate it?
 
-## Advanced REST Concepts
+If a bug appears only in production, I first check logs and error monitoring tools (like Sentry) to capture the exact error and stack trace. Production usually differs in environment, data size, or configuration.
+Next, I compare environment variables, DEBUG mode, database data, Python/package versions, and server settings between local and production. Many issues happen due to missing env variables or different dependencies.
+Then I try to replicate production conditions locally (same DB dump, same settings, DEBUG=False).
+For example, if an API fails only in production, I check whether a required environment variable like SECRET_KEY or third-party API key is missing or misconfigured.
 
-1. REST vs RPC.
-2. GraphQL vs REST trade-offs.
-3. gRPC basics.
-4. API aggregation pattern.
-5. Backend-for-Frontend (BFF).
-6. API schema evolution.
-7. OpenAPI contract-first approach.
-8. Handling breaking API changes.
-9. API documentation automation.
-10. API mocking strategies.
-11. HATEOAS practical issues.
-12. Long-running operations APIs.
-13. Streaming APIs basics.
-14. Pagination consistency.
-15. API governance.
+# 24. You need to log and trace slow database queries in production. What tools and approach would you use?
 
----
+To log and trace slow queries in production, I first enable database slow query logging (like PostgreSQL log_min_duration_statement) to capture queries taking more than a threshold (e.g., 500ms). This helps identify problematic SQL.
+Next, I use APM tools like New Relic or Datadog to trace request flow and see which view or query is slow. I also analyze queries using EXPLAIN ANALYZE to check for missing indexes or full table scans.
+In Django, I configure structured logging to capture query time in logs.
 
-## Background Processing & Async
+SQL
 
-1. When background jobs are mandatory.
-2. Celery architecture deep dive.
-3. Broker vs backend.
-4. Task retries and backoff.
-5. Idempotent Celery tasks.
-6. Task time limits.
-7. Monitoring Celery workers.
-8. Handling stuck tasks.
-9. Async views in Django.
-10. When async Django does not help.
-11. Async ORM limitations.
-12. Thread pool vs process pool.
-13. Scheduling periodic jobs.
-14. Handling large batch jobs.
-15. Graceful worker shutdown.
+        SET log_min_duration_statement = 500;
 
----
+Then analyze
 
-## Failure Handling & Resilience
+        EXPLAIN ANALYZE SELECT * FROM orders WHERE user_id = 10;
 
-1. Types of failures in production.
-2. Partial failure handling.
-3. Retry vs fail-fast.
-4. Exponential backoff.
-5. Timeout tuning.
-6. Bulkhead pattern.
-7. Graceful degradation.
-8. Fallback strategies.
-9. Chaos testing basics.
-10. Designing for failure.
-11. Preventing cascading failures.
-12. Error budgets.
-13. Incident severity levels.
-14. Root cause analysis.
-15. Learning from outages.
+# 27. When would you choose Class-Based Views over Function-Based Views in a production codebase?
 
----
+I choose Class-Based Views (CBVs) when I need reusable, structured, and scalable code, especially for CRUD operations. CBVs reduce repetition using inheritance and mixins, which makes production code cleaner and maintainable.
+For example, Django’s ListView, CreateView, or DRF’s ListCreateAPIView already provide built-in logic, so I don’t rewrite common functionality.
+I prefer CBVs when multiple views share similar behavior, like authentication or pagination.
+However, for very simple logic or small custom endpoints, Function-Based Views can be more readable and quicker to write.
 
-## Senior Engineer Decision Making
+# 28. How would you enforce data integrity when multiple users update the same record concurrently?
 
-1. How do you choose between two architectures?
-2. How do you evaluate technical risk?
-3. Build vs buy decision.
-4. When to refactor vs rewrite.
-5. How to say no to bad ideas.
-6. Balancing deadlines vs quality.
-7. Handling unclear ownership.
-8. Leading technical discussions.
-9. Documenting design decisions.
-10. Aligning tech with business goals.
-11. Estimating unknown tasks.
-12. Handling production pressure.
-13. Avoiding over-engineering.
-14. Choosing the right abstraction.
-15. What makes a system "boring" and why it is good.
+To enforce data integrity during concurrent updates, I use database transactions and locking mechanisms. The safest way is using select_for_update() inside transaction.atomic() to prevent race conditions.
+This ensures that when one user is updating a record, others must wait until the transaction completes.
+For lighter cases, I can use optimistic locking by adding a version or updated_at field and validating before saving.
 
----
+        from django.db import transaction
+        
+        with transaction.atomic():
+            order = Order.objects.select_for_update().get(id=1)
+            order.amount += 100
+            order.save()
 
-## Interview Trap & Scenario Questions
+# 30. You must optimize a slow Django admin page with large datasets. What practical steps would you take?
 
-1. A fix works locally but not in production.
-2. A bug appears only under load.
-3. Data loss incident – first steps?
-4. Rollback is not possible – what now?
-5. Third-party API is down.
-6. DB migration is slow on prod.
-7. Cache outage impact handling.
-8. Memory leak but no clear logs.
-9. Sporadic authentication failures.
-10. Timezone bugs across services.
-11. Duplicate payments incident.
-12. Sudden spike in error rates.
-13. Background jobs stuck.
-14. Deployment succeeded but app is broken.
-15. CEO wants a risky hotfix.
+To optimize a slow Django admin page with large datasets, I first reduce heavy queries by using list_select_related to avoid N+1 problems. I also limit displayed columns in list_display and avoid expensive model properties.
+Next, I add search_fields and list_filter only on indexed fields to improve performance. For very large tables, I disable full count using show_full_result_count = False.
+I also add pagination and proper database indexes on frequently filtered fields.
+
+        class OrderAdmin(admin.ModelAdmin):
+            list_display = ('id', 'customer', 'status')
+            list_select_related = ('customer',)
+            search_fields = ('customer__name',)
+            show_full_result_count = False
+
+# 31. You need to enforce row-level permissions so users can access only their own data. How would you implement it in Django?
+
+To enforce row-level permissions, I restrict data at the queryset level, not just in the UI. I always filter records based on the logged-in user.
+In Django REST Framework, I override get_queryset() to return only user-specific data. This ensures users cannot access others’ records even if they change the URL.
+For more complex rules, I use custom permission classes or libraries like django-guardian.
+
+        class OrderListView(ListAPIView):
+            serializer_class = OrderSerializer
+        
+            def get_queryset(self):
+                return Order.objects.filter(user=self.request.user)
+
+# 32. Your queryset filtering is becoming complex and duplicated across views. How would you refactor it cleanly?
+
+move complex filtering into a service layer or utility function, especially when the logic depends on multiple models or business rules. This keeps views thin and improves testability.
+You can create a separate file like services/order_service.py and centralize filtering logic there.
+
+services/order_service.py
+
+        # services/order_service.py
+        def get_filtered_orders(user, status=None):
+            queryset = Order.objects.filter(user=user)
+            if status:
+                queryset = queryset.filter(status=status)
+            return queryset
+
+views.py
+
+        def order_list(request):
+            orders = get_filtered_orders(request.user, status='active')
+
+# 36. You need to send emails reliably at scale without blocking requests. What architecture would you use?
+
+To send emails reliably at scale without blocking requests, I use an asynchronous task queue architecture with Celery + Redis/RabbitMQ as broker. The API only pushes an email task to the queue and immediately returns response.
+Email sending is handled by separate Celery workers, which allows retries, rate limiting, and failure handling. This prevents request blocking and improves scalability.
+For high scale, I integrate a third-party provider like SendGrid or Amazon SES for better deliverability.
+
+task.py
+        
+        # tasks.py
+        from celery import shared_task
+        from django.core.mail import send_mail
+        
+        @shared_task(bind=True, max_retries=3)
+        def send_email_task(self, subject, message, to_email):
+            try:
+                send_mail(subject, message, "from@test.com", [to_email])
+            except Exception as exc:
+                self.retry(exc=exc, countdown=60)
+
+views.py
+
+        send_email_task.delay("Welcome", "Hello User", user.email)
+
+# 43. How would you implement feature flags in a Django application?
+
+To implement feature flags in Django, I introduce a feature toggle system that allows enabling/disabling features without redeploying code. This helps in safe releases and A/B testing.
+For simple cases, I use a database model or environment variable to control flags. For production-grade setup, I use libraries like django-waffle.
+I check the flag before executing new logic so it can be turned off instantly if issues occur.
+
+model.py
+
+        class FeatureFlag(models.Model):
+            name = models.CharField(max_length=100, unique=True)
+            is_enabled = models.BooleanField(default=False)
+
+views.py
+
+        def new_checkout(request):
+            if FeatureFlag.objects.get(name="new_checkout").is_enabled:
+                return new_logic()
+            return old_logic()
+
+# 44. You must ensure secure file downloads where only authorized users can access files. How would you design it?
+To ensure secure file downloads, I never expose direct file URLs from MEDIA folder. Instead, I create a protected download endpoint that checks authentication and authorization before serving the file.
+Files are stored outside public static paths or in private cloud storage (like S3 private bucket). Access is validated based on user ownership or role.
+After validation, I stream the file securely using Django response.
+
+views.py
+        
+        from django.http import FileResponse
+        from django.contrib.auth.decorators import login_required
+        from django.shortcuts import get_object_or_404
+        
+        @login_required
+        def download_invoice(request, pk):
+            invoice = get_object_or_404(Invoice, pk=pk, user=request.user)
+            return FileResponse(open(invoice.file.path, 'rb'), as_attachment=True)
+
+# 46. How would you implement full-text search in Django for large datasets?
+
+For large datasets, I avoid simple icontains because it is slow and not scalable. Instead, I use database-level full-text search like PostgreSQL Full-Text Search or an external engine like Elasticsearch for very high scale.
+With PostgreSQL, I use SearchVector, SearchQuery, and proper indexing (GIN index) for fast searching. This keeps performance high even with millions of rows.
+For advanced features like ranking, autocomplete, and typo tolerance, Elasticsearch is better.
+        
+        from django.contrib.postgres.search import SearchVector, SearchQuery
+        
+        Product.objects.annotate(
+            search=SearchVector('name', 'description')
+        ).filter(search=SearchQuery('laptop'))
+
+and add index
+
+        GinIndex(fields=['name', 'description'])
+
+# 50. How would you implement API request/response logging without hurting performance?
+
+To implement API request/response logging without hurting performance, I avoid heavy synchronous logging inside views. Instead, I use middleware to capture minimal structured data like path, method, status code, and response time.
+I log only required fields (not full payload for large bodies) and send logs asynchronously to tools like ELK or Datadog. For very high traffic, I push logs to a queue instead of writing directly to file.
+I also exclude health-check or static endpoints to reduce noise.
+
+middleware.py
+
+        import time
+        import logging
+        
+        logger = logging.getLogger("api_logger")
+        
+        class APILoggingMiddleware:
+            def __init__(self, get_response):
+                self.get_response = get_response
+        
+            def __call__(self, request):
+                start_time = time.time()
+                response = self.get_response(request)
+                duration = time.time() - start_time
+        
+                logger.info({
+                    "path": request.path,
+                    "method": request.method,
+                    "status": response.status_code,
+                    "duration": duration
+                })
+                return response
+
+# 52. You need to implement data export (CSV/Excel) for millions of rows. How would you do it efficiently?
+
+For exporting millions of rows, I avoid loading all data into memory at once. Instead, I use streaming responses and iterate using QuerySet.iterator() to fetch data in chunks.
+For CSV, I use Django’s StreamingHttpResponse so data is generated row by row. For Excel, I generate the file in background using Celery if it’s very large.
+I also move heavy exports to async tasks and notify the user when the file is ready.
+
+        import csv
+        from django.http import StreamingHttpResponse
+        
+        def export_orders(request):
+            def generate():
+                yield "id,amount,status\n"
+                for order in Order.objects.iterator(chunk_size=1000):
+                    yield f"{order.id},{order.amount},{order.status}\n"
+        
+            response = StreamingHttpResponse(generate(), content_type="text/csv")
+            response['Content-Disposition'] = 'attachment; filename="orders.csv"'
+            return response
+
+# 55. Your DRF serializer is slow for large lists. How would you optimize serialization performance?
+
+If a DRF serializer is slow for large lists, I first check for N+1 query problems and fix them using select_related() or prefetch_related() in the queryset. Slow serialization is often due to extra DB hits.
+Next, I avoid heavy SerializerMethodField logic and unnecessary nested serializers. If full model fields are not required, I use .values() or a simpler serializer.
+For very large lists, I enable pagination and limit response size.
+
+        class OrderListView(ListAPIView):
+            serializer_class = OrderSerializer
+        
+            def get_queryset(self):
+                return Order.objects.select_related('customer').only(
+                    'id', 'amount', 'status', 'customer__name'
+                )
+
+# You need to protect an API from brute-force login attempts. What mechanisms would you use?
+
+To protect an API from brute-force login attempts, I implement rate limiting and account lock mechanisms. In DRF, I enable throttling to limit login attempts per IP or user.
+I also track failed login attempts and temporarily lock the account after a threshold (e.g., 5 failed attempts). Adding CAPTCHA after multiple failures increases security.
+For production, I use tools like Nginx rate limiting or services like Cloudflare for extra protection.
+
+        # settings.py
+        REST_FRAMEWORK = {
+            'DEFAULT_THROTTLE_CLASSES': [
+                'rest_framework.throttling.UserRateThrottle',
+            ],
+            'DEFAULT_THROTTLE_RATES': {
+                'user': '5/min',
+            }
+        }
+
+# How would you safely rotate secrets (DB passwords, API keys) in a Django production system?
+
+To safely rotate secrets in production, I never hardcode them in settings. I store DB passwords and API keys in environment variables or secret managers (like AWS Secrets Manager or Vault).
+I follow a rolling rotation strategy — first add the new secret, update the application to support it, then remove the old one after verification. This avoids downtime.
+For database passwords, I create a new DB user/password, update the app config, deploy, and then revoke the old credentials.
+For API keys, I support multiple active keys during transition. This ensures secure rotation without breaking the running system.
+
+Store Secrets Outside Code
+Never hardcode secrets in settings.py.
+Use:
+Environment variables
+.env file (for dev)
+Secret managers (AWS Secrets Manager / Vault / Kubernetes Secrets)
+
+        import os
+        
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.postgresql",
+                "NAME": os.environ.get("DB_NAME"),
+                "USER": os.environ.get("DB_USER"),
+                "PASSWORD": os.environ.get("DB_PASSWORD"),
+                "HOST": os.environ.get("DB_HOST"),
+            }
+        }
+
